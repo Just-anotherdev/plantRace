@@ -245,6 +245,7 @@ class Engine:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
+                        self.stopwatch.reset()
                         self.mode = 3
                         
                 if event.type == pygame.QUIT:
@@ -840,9 +841,9 @@ class stopwatch:
         if self.paused == 0:
             self.elapsedsec = (time.time() - self.starttime) - self.pausedtime
             self.stopwatchmesg = f"time elapsed: {self.elapsedsec:.2f}  seconds"
-            self.pausedtime = 0
         elif self.paused == 1:
-            self.pausedtime = self.pausedtime + (time.time() - self.pausestart)
+            self.pausedtime = (time.time() - self.pausestart)
+            print(f"myengine.pausedtime {self.pausedtime}")
     def pause(self):
         self.pausestart = time.time()
         self.paused = 1
