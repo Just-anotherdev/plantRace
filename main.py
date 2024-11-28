@@ -105,6 +105,7 @@ class Engine:
         
         pygame.display.flip()
         
+        
     def render_hud(self):
         if self.mode == 1:
             self.itt.render()
@@ -190,8 +191,10 @@ class Engine:
                 self.stopwatch.update()
                 
         elif self.mode == 4:
-            #print("one pause update")
-            #self.stopwatch.update()
+            #
+            #
+            self.stopwatch.update()
+            #
             pass
         elif self.mode == 5:
             #won
@@ -205,6 +208,7 @@ class Engine:
                 sprite.animate()
 
     def test_keys(self):
+        
         if self.mode == 0:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
@@ -222,7 +226,8 @@ class Engine:
                         self.stringbuffer = []
                         self.mode = 2
                     elif event.key == pygame.K_BACKSPACE:
-                        self.stringbuffer.pop()
+                        if len(self.stringbuffer) >= 1:
+                            self.stringbuffer.pop()
                     else:
                         self.stringbuffer.append(event.unicode)
                 if event.type == pygame.QUIT:
@@ -265,6 +270,7 @@ class Engine:
                     if event.key == 27:  # escape
                         self.mode = 4
                         self.stopwatch.pause()
+                        
                     elif event.key == 32:  # spacebar
                         if self.food > 0:
                             self.food = self.food - 1
@@ -293,19 +299,19 @@ class Engine:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
-            if self.mode == 4:
-                print("testing paused keys")
+        if self.mode == 4:
+                
                 for event in pygame.event.get():
                     if event.type == pygame.KEYDOWN:
+                        print("testing the keys in pause mode")
                         if event.key == 27:
-                            print("unpaused")
+                            
                             self.mode = 3
-                           
                             self.stopwatch.unpause()
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         quit()
-            if self.mode == 5:
+        if self.mode == 5:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
@@ -373,15 +379,13 @@ class Camera(pygame.sprite.Sprite):
 
 class interactivetextbox(pygame.sprite.Sprite):
     def __init__(self):
-        #self.image =
-        #self.rect = 
         pass
     def render(self):
+        myengine.screen.blit(self.image,self.rect)
+    def update(self):
         self.image = myengine.basefont.render("".join(myengine.stringbuffer), False , (255, 255, 255))
         self.rect = self.image.get_rect()
         self.rect.center = (myengine.windoww / 2, myengine.windowh / 2)
-        myengine.screen.blit(self.image,self.rect)
-    def update(self):
         pass
 
 class Background(Engine):
@@ -486,7 +490,6 @@ class Background(Engine):
         assert len(listoftiles) + 1 != int(numofrows) * int(
             numofcols
         ), "the list passed to tilestofullmap would not generate a valid map"
-        # assert len(listoftiles) < 512, "this is going to run so slow with that input image"
         tilewidth = 200  # the width in pixels of the tiles
         tileheight = 200  # the width in pixels of the tiles
         j = 1
