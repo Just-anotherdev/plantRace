@@ -51,6 +51,7 @@ class Engine:
     def test_win(self):
         if self.score >= self.winscore:
             self.winner = 1
+            self.scoreboard.write(self.stopwatch.elapsedsec)
         if self.winner == 1:
             for sprite in self.poopobj:
                 sprite.image = pygame.image.load("Assets/sprites/goldpoop.png")
@@ -100,6 +101,9 @@ class Engine:
             self.screen.blit(splashscreen,(0,0))
             pass
         elif self.mode == 5:
+            splashscreen = pygame.image.load(f"{self.splashprefix}winscreen.png")
+            self.screen.blit(splashscreen, (0,0))
+            self.render_hud()
             #game won
             pass
         
@@ -122,10 +126,17 @@ class Engine:
             elif self.showcontrols == 0 and self.food > 2 and self.haspooped == 0:
                 poomesg = self.basefont.render("use spacebar to poop. plants need poop to grow", False, (255, 255, 255))
                 self.screen.blit(poomesg, ((self.windoww / 2) - 250, (self.windowh / 2) - 200))
+            elif self.showcontrols == 0 and self.haspooped == 1:
+                scoremesg = self.basefont.render(f"SCORE: {self.score}  /  {self.winscore}", False, (255, 255, 255))
+                self.screen.blit(scoremesg, ((self.windoww / 2) - 58, (self.windowh / 10)))
+            stopwatchmesg = self.basefont.render(self.stopwatch.stopwatchmesg, False, (255, 255, 255))
+            self.screen.blit(stopwatchmesg, (50, ((self.windowh / 10) * 9)))
+        elif self.mode == 5:
             if self.winner == 1:
                 winmessage = self.basefont.render("you win! thanks for playing my tech demo!", False, (255, 255, 255))
                 self.screen.blit(winmessage, ((self.windoww / 2) - 180, self.windowh / 2 - 220))
                 self.scoreboard.build()
+                
                 if len(self.scoreboard.top10) >= 1:
                     self.screen.blit(self.scoreboard.mesg, (((self.windoww /2) - 50), self.windowh / 2 - 180))
                     self.screen.blit(self.scoreboard.first, (((self.windoww / 2) - 145), self.windowh / 2 - 160))
@@ -140,18 +151,14 @@ class Engine:
                 if len(self.scoreboard.top10) >= 6:
                     self.screen.blit(self.scoreboard.sixth, (((self.windoww / 2) - 145), self.windowh / 2 - 60))
                 if len(self.scoreboard.top10) >= 7:
-                    self.screen.blit(self.scoreboard.seventh, (((seslf.windoww / 2) - 145), self.windowh / 2 - 40))
+                    self.screen.blit(self.scoreboard.seventh, (((self.windoww / 2) - 145), self.windowh / 2 - 40))
                 if len(self.scoreboard.top10) >= 8:
                     self.screen.blit(self.scoreboard.eigth, (((self.windoww / 2) - 145), self.windowh / 2 - 20))
                 if len(self.scoreboard.top10) >= 9:
                     self.screen.blit(self.scoreboard.ninth, (((self.windoww / 2) - 145), self.windowh / 2))
                 if len(self.scoreboard.top10) >= 10:
-                    self.screen.blit(self.scoreboard.tenth, ((((windoww / 2) - 145), ((windowh / 2) + 20))))
-            elif self.showcontrols == 0 and self.haspooped == 1:
-                scoremesg = self.basefont.render(f"SCORE: {self.score}  /  {self.winscore}", False, (255, 255, 255))
-                self.screen.blit(scoremesg, ((self.windoww / 2) - 58, (self.windowh / 10)))
-            stopwatchmesg = self.basefont.render(self.stopwatch.stopwatchmesg, False, (255, 255, 255))
-            self.screen.blit(stopwatchmesg, (50, ((self.windowh / 10) * 9)))
+                    self.screen.blit(self.scoreboard.tenth, ((((self.windoww / 2) - 145), ((self.windowh / 2) + 20))))
+            
 
     def update_logic(self):
         
@@ -238,6 +245,7 @@ class Engine:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
+                        self.stopwatch.reset()
                         self.mode = 3
                         
                 if event.type == pygame.QUIT:
@@ -255,6 +263,7 @@ class Engine:
                         mycat.catcolor = 2
                     if event.key == pygame.K_q:
                         self.winner = 1
+                        self.scoreboard.write(self.stopwatch.elapsedsec)
                     if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                         mycat.xv = -10
                         self.showcontrols = 0
@@ -300,12 +309,9 @@ class Engine:
                     pygame.quit()
                     quit()
         if self.mode == 4:
-                
                 for event in pygame.event.get():
                     if event.type == pygame.KEYDOWN:
-                        print("testing the keys in pause mode")
                         if event.key == 27:
-                            
                             self.mode = 3
                             self.stopwatch.unpause()
                     if event.type == pygame.QUIT:
@@ -836,7 +842,8 @@ class stopwatch:
             self.elapsedsec = (time.time() - self.starttime) - self.pausedtime
             self.stopwatchmesg = f"time elapsed: {self.elapsedsec:.2f}  seconds"
         elif self.paused == 1:
-            self.pausedtime = self.pausedtime + (time.time() - self.pausestart)
+            self.pausedtime = (time.time() - self.pausestart)
+            print(f"myengine.pausedtime {self.pausedtime}")
     def pause(self):
         self.pausestart = time.time()
         self.paused = 1
