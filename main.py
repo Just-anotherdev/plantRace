@@ -3,14 +3,18 @@ import pygame
 import numpy as np
 from PIL import Image
 import time
-
+import base64
+import re
 
 
 class Engine:
     def __init__(self):
         pygame.init()  # initialize pygame
         pygame.font.init()  # initialize fonts
-        basefont = pygame.font.SysFont("Comic Sans MS", 30)  # finish initializing font
+        self.basefont = pygame.font.SysFont("Comic Sans MS", 30)  # finish initializing font
+        self.stopwatch = stopwatch()
+        self.stopwatch.update()
+        self.scoreboard = scoreboard()
         self.init_groups()
         self.init_screen()
         self.poodissapear = 1
@@ -22,6 +26,12 @@ class Engine:
         self.growtimer = 0
         self.winner = 0
         self.starttime = time.time()
+        self.showcontrols = 1
+        self.winscore = 0
+        self.haspooped = 0
+        self.mode = 0
+        self.itt = interactivetextbox()
+        self.stringbuffer = []
 
     def init_score(self):
         self.score = 0
@@ -31,7 +41,11 @@ class Engine:
             if sprite.tilename == "plant1stage3wet":
                 self.mapscore = self.mapscore + 1
         for sprite in self.tileset:
-            if sprite.tilename == "plant1stage1wet" or sprite.tilename == "plant1stage2wet" or sprite.tilename == "dirtwet":
+            if (
+                sprite.tilename == "plant1stage1wet"
+                or sprite.tilename == "plant1stage2wet"
+                or sprite.tilename == "dirtwet"
+            ):
                 self.winscore = self.winscore + 1
 
     def test_win(self):
@@ -44,7 +58,7 @@ class Engine:
                 sprite.kill()
             self.food = 5000
             self.poodissapear = 0
-
+            self.mode = 5
     def init_screen(self):
         self.windowh = 640
         self.windoww = 960
@@ -59,25 +73,130 @@ class Engine:
         self.toanimate = pygame.sprite.Group()
 
     def render_screen(self):
-        for sprite in self.allvisible:
-            self.screen.blit(
-                sprite.image,
-                (sprite.rect.x - cameraobj.rect.x, sprite.rect.y - cameraobj.rect.y),
-            )
+        
+        if self.mode == 0:
+            splashscreen = pygame.image.load(f"{self.splashprefix}startscreen.png")
+            self.screen.blit(splashscreen, (0,0))
+        elif self.mode == 1:
+            splashscreen = pygame.image.load(f"{self.splashprefix}entername.png")
+            self.screen.blit(splashscreen, (0,0))
+            self.render_hud()
+        elif self.mode == 2:
+            splashscreen = pygame.image.load(f"{self.splashprefix}controls.png")
+            self.screen.blit(splashscreen,(0,0))
+        elif self.mode == 3:
+            
+            #game running
+            for sprite in self.allvisible:
+                
+                self.screen.blit(
+                    sprite.image,
+                    (sprite.rect.x - cameraobj.rect.x, sprite.rect.y - cameraobj.rect.y),
+                )
+                
+            self.render_hud()
+        elif self.mode == 4:
+            splashscreen = pygame.image.load(f"{self.splashprefix}pause.png")
+            self.screen.blit(splashscreen,(0,0))
+            pass
+        elif self.mode == 5:
+            #game won
+            pass
+        
         pygame.display.flip()
+        
+    def render_hud(self):
+        if self.mode == 1:
+            self.itt.render()
+        elif self.mode == 3:
+            if self.showcontrols == 1:
+                controlmessage = self.basefont.render("use the arrow keys or wasd to move", False, (255, 255, 255))
+                self.screen.blit(controlmessage, ((self.windoww / 2) - 200, (self.windowh / 2) - 200))
+            elif self.showcontrols == 0 and self.food < 2 and self.score < self.winscore:
+                hungermes = self.basefont.render("you feel hungry", False, (255, 255, 255))
+                self.screen.blit(hungermes, ((self.windoww / 2) - 100, (self.windowh / 2) - 200))
+            elif self.showcontrols == 0 and self.food == 100 and self.score < self.winscore:
+                fullmesg = self.basefont.render("you feel full", False, (255, 255, 255))
+                self.screen.blit(fullmesg, ((self.windoww / 2) - 80, (self.windowh / 2) - 200))
+            elif self.showcontrols == 0 and self.food > 2 and self.haspooped == 0:
+                poomesg = self.basefont.render("use spacebar to poop. plants need poop to grow", False, (255, 255, 255))
+                self.screen.blit(poomesg, ((self.windoww / 2) - 250, (self.windowh / 2) - 200))
+            if self.winner == 1:
+                winmessage = self.basefont.render("you win! thanks for playing my tech demo!", False, (255, 255, 255))
+                self.screen.blit(winmessage, ((self.windoww / 2) - 180, self.windowh / 2 - 220))
+                self.scoreboard.build()
+                if len(self.scoreboard.top10) >= 1:
+                    self.screen.blit(self.scoreboard.mesg, (((self.windoww /2) - 50), self.windowh / 2 - 180))
+                    self.screen.blit(self.scoreboard.first, (((self.windoww / 2) - 145), self.windowh / 2 - 160))
+                if len(self.scoreboard.top10) >= 2:
+                    self.screen.blit(self.scoreboard.second, (((self.windoww / 2) - 145), self.windowh / 2 - 140))
+                if len(self.scoreboard.top10) >= 3:
+                    self.screen.blit(self.scoreboard.third, (((self.windoww / 2) - 145), self.windowh / 2 - 120))
+                if len(self.scoreboard.top10) >= 4:
+                    self.screen.blit(self.scoreboard.fourth, (((self.windoww / 2) - 145), self.windowh / 2 - 100))
+                if len(self.scoreboard.top10) >= 5:
+                    self.screen.blit(self.scoreboard.fifth, (((self.windoww / 2) - 145), self.windowh / 2 - 80))
+                if len(self.scoreboard.top10) >= 6:
+                    self.screen.blit(self.scoreboard.sixth, (((self.windoww / 2) - 145), self.windowh / 2 - 60))
+                if len(self.scoreboard.top10) >= 7:
+                    self.screen.blit(self.scoreboard.seventh, (((seslf.windoww / 2) - 145), self.windowh / 2 - 40))
+                if len(self.scoreboard.top10) >= 8:
+                    self.screen.blit(self.scoreboard.eigth, (((self.windoww / 2) - 145), self.windowh / 2 - 20))
+                if len(self.scoreboard.top10) >= 9:
+                    self.screen.blit(self.scoreboard.ninth, (((self.windoww / 2) - 145), self.windowh / 2))
+                if len(self.scoreboard.top10) >= 10:
+                    self.screen.blit(self.scoreboard.tenth, ((((windoww / 2) - 145), ((windowh / 2) + 20))))
+            elif self.showcontrols == 0 and self.haspooped == 1:
+                scoremesg = self.basefont.render(f"SCORE: {self.score}  /  {self.winscore}", False, (255, 255, 255))
+                self.screen.blit(scoremesg, ((self.windoww / 2) - 58, (self.windowh / 10)))
+            stopwatchmesg = self.basefont.render(self.stopwatch.stopwatchmesg, False, (255, 255, 255))
+            self.screen.blit(stopwatchmesg, (50, ((self.windowh / 10) * 9)))
 
     def update_logic(self):
-        self.normalize_velocity()
-        self.update_fish()
-        mycat.update()
-        self.poopobj.update()
-        self.animate_all()
-        cameraobj.update()
-        self.lock_in_bounds()
-        self.calculate_score()
-        self.test_win()
-        self.grow_plants()
-
+        
+        if self.mode == 0:
+            #title screen
+            pass
+        elif self.mode == 1:
+            #enter name
+            self.itt.update()
+            pass
+        elif self.mode == 2:
+            #show controls
+            pass
+        elif self.mode == 3:
+            
+            self.normalize_velocity()
+            
+            self.update_fish()
+            
+            mycat.update()
+            
+            self.poopobj.update()
+            
+            self.animate_all()
+            
+            cameraobj.update()
+            
+            self.lock_in_bounds()
+            
+            self.calculate_score()
+            
+            self.test_win()
+            
+            self.grow_plants()
+            
+            if self.winner == 0:
+                self.stopwatch.update()
+                
+        elif self.mode == 4:
+            #print("one pause update")
+            #self.stopwatch.update()
+            pass
+        elif self.mode == 5:
+            #won
+            pass
+        
     def animate_all(self):
         self.animationtimer = self.animationtimer + 1
         if self.animationtimer > 10:
@@ -86,57 +205,111 @@ class Engine:
                 sprite.animate()
 
     def test_keys(self):
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_u:
-                    mycat.catcolor = 0
-                if event.key == pygame.K_i:
-                    mycat.catcolor = 1
-                if event.key == pygame.K_o:
-                    mycat.catcolor = 2
-                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    mycat.xv = -10
-                    self.showcontrols = 0
-                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    mycat.xv = 10
-                    self.showcontrols = 0
-                elif event.key == pygame.K_UP or event.key == pygame.K_w:
-                    mycat.yv = -10
-                    self.showcontrols = 0
-                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    mycat.yv = 10
-                    self.showcontrols = 0
-                # if event.key == 27:  # escape
-                #   pygame.quit()
-                #  quit()
-                elif event.key == 32:  # spacebar
-                    if self.food > 0:
-                        self.food = self.food - 1
-                        if len(self.poopobj) < 10:
-                            Poop(mycat.rect.left, mycat.rect.top)
-                        else:
-                            j = 0
-                            tempi = 0
-                            while tempi < 10:
-                                tempi = tempi + 1
-                                for e in self.poopobj:
-                                    j = j + 1
-                                    if j == 1:
-                                        if self.poodissapear == 1:
-                                            e.kill()
-                                        Poop(mycat.rect.left, mycat.rect.top)
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    mycat.resetx = 1
-                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    mycat.resetx = 1
-                elif event.key == pygame.K_UP or event.key == pygame.K_w:
-                    mycat.resety = 1
-                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    mycat.resety = 1
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+        if self.mode == 0:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.mode = 1
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+        elif self.mode == 1:
+            #enter name
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        self.playername = "".join(self.stringbuffer)
+                        self.stringbuffer = []
+                        self.mode = 2
+                    elif event.key == pygame.K_BACKSPACE:
+                        self.stringbuffer.pop()
+                    else:
+                        self.stringbuffer.append(event.unicode)
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+        elif self.mode == 2:
+            #show controls
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.mode = 3
+                        
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+        elif self.mode == 3:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_u:
+                        mycat.catcolor = 0
+                        
+                    if event.key == pygame.K_i:
+                        mycat.catcolor = 1
+                    if event.key == pygame.K_o:
+                        mycat.catcolor = 2
+                    if event.key == pygame.K_q:
+                        self.winner = 1
+                    if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                        mycat.xv = -10
+                        self.showcontrols = 0
+                    elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                        mycat.xv = 10
+                        self.showcontrols = 0
+                    elif event.key == pygame.K_UP or event.key == pygame.K_w:
+                        mycat.yv = -10
+                        self.showcontrols = 0
+                    elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                        mycat.yv = 10
+                        self.showcontrols = 0
+                    if event.key == 27:  # escape
+                        self.mode = 4
+                        self.stopwatch.pause()
+                    elif event.key == 32:  # spacebar
+                        if self.food > 0:
+                            self.food = self.food - 1
+                            if len(self.poopobj) < 10:
+                                Poop(mycat.rect.left, mycat.rect.top)
+                            else:
+                                j = 0
+                                tempi = 0
+                                while tempi < 10:
+                                    tempi = tempi + 1
+                                    for e in self.poopobj:
+                                        j = j + 1
+                                        if j == 1:
+                                            if self.poodissapear == 1:
+                                                e.kill()
+                                            Poop(mycat.rect.left, mycat.rect.top)
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                        mycat.resetx = 1
+                    elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                        mycat.resetx = 1
+                    elif event.key == pygame.K_UP or event.key == pygame.K_w:
+                        mycat.resety = 1
+                    elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                        mycat.resety = 1
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+            if self.mode == 4:
+                print("testing paused keys")
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == 27:
+                            print("unpaused")
+                            self.mode = 3
+                           
+                            self.stopwatch.unpause()
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+            if self.mode == 5:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
 
     def update_fish(self):
         if len(self.fishobj) < len(self.watertiles) * 2:
@@ -198,11 +371,25 @@ class Camera(pygame.sprite.Sprite):
         self.rect.centerx, self.rect.centery = mycat.rect.centerx, mycat.rect.centery
 
 
+class interactivetextbox(pygame.sprite.Sprite):
+    def __init__(self):
+        #self.image =
+        #self.rect = 
+        pass
+    def render(self):
+        self.image = myengine.basefont.render("".join(myengine.stringbuffer), False , (255, 255, 255))
+        self.rect = self.image.get_rect()
+        self.rect.center = (myengine.windoww / 2, myengine.windowh / 2)
+        myengine.screen.blit(self.image,self.rect)
+    def update(self):
+        pass
+
 class Background(Engine):
     def __init__(self):
         super().__init__()
         self.tileprefix = "Assets/tiles/"  # prefix for tile filenames
         self.mapprefix = "Assets/maps/"  # prefix for input map filenames
+        self.splashprefix = "Assets/splashscreens/"
         self.generate_bg()
 
     def init_bg_frame(self):
@@ -210,9 +397,15 @@ class Background(Engine):
 
     def init_tiles(self, tilename=("finishinit"), x=0, y=0):
         # this function initializes the tileset with the proper states based on tilename
-        assert type(tilename) is str, "check input to inittiles tilename must be a string"
-        assert type(x) is int and type(y) is int, "check input to inittiles x and y must be positive ints"
-        assert x >= 0 and y >= 0, "check input to inittiles x and y must be positive ints"
+        assert (
+            type(tilename) is str
+        ), "check input to inittiles tilename must be a string"
+        assert (
+            type(x) is int and type(y) is int
+        ), "check input to inittiles x and y must be positive ints"
+        assert (
+            x >= 0 and y >= 0
+        ), "check input to inittiles x and y must be positive ints"
         if tilename == "catbeddry":
             Tile("catbeddry", f"{self.tileprefix}catbeddry.png", x, y, self)
         elif tilename == "catbedwet":
@@ -268,7 +461,11 @@ class Background(Engine):
         tiles = []  # initialize
         temparray = []  # initialize a temporary array to pop from
         rgbvalues = []  # flat array of tuples representing rgb values
-        for m in img:  # loop through the 3d numpy array to extract an 1d array of tuples of rgb values
+        for (
+            m
+        ) in (
+            img
+        ):  # loop through the 3d numpy array to extract an 1d array of tuples of rgb values
             for n in m:
                 for o in n:
                     if p < 3:
@@ -318,7 +515,9 @@ class Background(Engine):
 class Tile(pygame.sprite.Sprite, Background):
     def __init__(self, tilename, image_file, posx, posy, engine):
         assert type(tilename) is str, "tilename must be a string"
-        assert type(posx) is int and type(posy) is int and posx >= 0 and posy >= 0, "posx and posy must be positivve ints"
+        assert (
+            type(posx) is int and type(posy) is int and posx >= 0 and posy >= 0
+        ), "posx and posy must be positivve ints"
         self.tilename = tilename
         pygame.sprite.Sprite.__init__(self)  # call Sprite initializer
         self.image = pygame.image.load(image_file)  # load the tile image by name
@@ -339,21 +538,27 @@ class Tile(pygame.sprite.Sprite, Background):
         if self.tilename == "plant1stage1wet":
             if pygame.sprite.spritecollideany(self, myengine.poopobj) is not None:
                 self.tilename = "plant1stage2wet"
-                self.image = pygame.image.load(f"{myengine.tileprefix}plant1stage2wet.png")
+                self.image = pygame.image.load(
+                    f"{myengine.tileprefix}plant1stage2wet.png"
+                )
                 self.image = self.image.convert()
                 pooptokill = pygame.sprite.spritecollideany(self, myengine.poopobj)
                 pooptokill.used = 1
         elif self.tilename == "plant1stage2wet":
             if pygame.sprite.spritecollideany(self, myengine.poopobj) is not None:
                 self.tilename = "plant1stage3wet"
-                self.image = pygame.image.load(f"{myengine.tileprefix}plant1stage3wet.png")
+                self.image = pygame.image.load(
+                    f"{myengine.tileprefix}plant1stage3wet.png"
+                )
                 self.image = self.image.convert()
                 pooptokill = pygame.sprite.spritecollideany(self, myengine.poopobj)
                 pooptokill.used = 1
         elif self.tilename == "dirtwet":
             if pygame.sprite.spritecollideany(self, myengine.poopobj) is not None:
                 self.tilename = "plant1stage1wet"
-                self.image = pygame.image.load(f"{myengine.tileprefix}plant1stage1wet.png")
+                self.image = pygame.image.load(
+                    f"{myengine.tileprefix}plant1stage1wet.png"
+                )
                 self.image = self.image.convert()
                 pooptokill = pygame.sprite.spritecollideany(self, myengine.poopobj)
                 pooptokill.used = 1
@@ -361,7 +566,9 @@ class Tile(pygame.sprite.Sprite, Background):
     def populate_fish(self):
         if self.tilename == "water":
             fish(
-                random.randrange(self.rect.left, (self.rect.left + self.rect.width) - 32),
+                random.randrange(
+                    self.rect.left, (self.rect.left + self.rect.width) - 32
+                ),
                 random.randrange(self.rect.top, (self.rect.top + self.rect.width) - 32),
             )
 
@@ -372,31 +579,102 @@ class Bgframe(pygame.sprite.Sprite):
         assert (
             type(myengine.bgwidth) is int and type(myengine.bgheight) is int
         ), "Bgframe requires bgheight and bgwidth to be non zero positive ints"
-        assert myengine.bgwidth > 0 and myengine.bgheight > 0, "Bgframe requires bgheight and bgwidth to be non zero positive ints"
+        assert (
+            myengine.bgwidth > 0 and myengine.bgheight > 0
+        ), "Bgframe requires bgheight and bgwidth to be non zero positive ints"
         pygame.sprite.Sprite.__init__(self)
         self.rect = pygame.Rect(0, 0, myengine.bgwidth, myengine.bgheight)
+
+class scoreboard:
+    def __init__(self):
+        with open("Assets/saves/sb.scoreboard", "r") as scoreboard:
+            scoreboard_b64_list = scoreboard.readlines()
+            unsortedScoreboard = []
+            for i in scoreboard_b64_list:
+                unsortedScoreboard.append(base64.standard_b64decode(i).decode())
+            self.unsortedscoreboard = unsortedScoreboard
+            self.sortedscoreboard = sorted(
+                unsortedScoreboard, key=lambda test_string: list(map(int, re.findall(r"\d+", test_string)))[0]
+            )
+            self.top10 = []
+            i = 0
+            for score in self.sortedscoreboard:
+                if i <= 9:
+                    self.top10.append(score)
+                    i = i + 1
+
+    def write(self, timelapsed):
+        winning_stopwatch = f"{myengine.playername}  {myengine.stopwatch.elapsedsec:.2f} seconds"
+        winning_stopwatch = winning_stopwatch.encode("utf-8")
+        with open("Assets/saves/sb.scoreboard", "a") as scoreboard:
+            b64winning_stopwatch = base64.standard_b64encode(winning_stopwatch)
+            scoreboard.write(b64winning_stopwatch.decode())
+            scoreboard.write("\n")
+        with open("Assets/saves/sb.scoreboard", "r") as scoreboard:
+            scoreboard_b64_list = scoreboard.readlines()
+            unsortedScoreboard = []
+            for i in scoreboard_b64_list:
+                unsortedScoreboard.append(base64.standard_b64decode(i).decode())
+            self.unsortedscoreboard = unsortedScoreboard
+            self.sortedscoreboard = sorted(
+                unsortedScoreboard, key=lambda test_string: list(map(int, re.findall(r"\d+", test_string)))[0]
+            )
+            self.top10 = []
+            i = 0
+            for score in self.sortedscoreboard:
+                if i <= 9:
+                    self.top10.append(score)
+                    i = i + 1
+                    
+    def build(self):
+        if len(self.top10) >= 10:
+            self.tenth = myengine.basefont.render(f"10). {self.top10[9]}", False, (255, 255, 255))
+        if len(self.top10) >= 9:
+            self.ninth = myengine.basefont.render(f"9). {self.top10[8]}", False, (255, 255, 255))
+        if len(self.top10) >= 8:
+            self.eigth = myengine.basefont.render(f"8). {self.top10[7]}", False, (255, 255, 255))
+        if len(self.top10) >= 7:
+            self.seventh = myengine.basefont.render(f"7). {self.top10[6]}", False, (255, 255, 255))
+        if len(self.top10) >= 6:
+            self.sixth = myengine.basefont.render(f"6). {self.top10[5]}", False, (255, 255, 255))
+        if len(self.top10) >= 5:
+            self.fifth = myengine.basefont.render(f"5). {self.top10[4]}", False, (255, 255, 255))
+        if len(self.top10) >= 4:
+            self.fourth = myengine.basefont.render(f"4). {self.top10[3]}", False, (255, 255, 255))
+        if len(self.top10) >= 3:
+            self.third = myengine.basefont.render(f"3). {self.top10[2]}", False, (255, 255, 255))
+        if len(self.top10) >= 2:
+            self.second = myengine.basefont.render(f"2). {self.top10[1]}", False, (255, 255, 255))
+        if len(self.top10) >= 1:
+            self.mesg = myengine.basefont.render("SCOREBOARD", False, (255,255,255))
+            self.first = myengine.basefont.render(f"1). {self.top10[0]}", False, (255, 255, 255))
+
+
 
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)  # initialize sprite
-        self.catcolor = 0  # 0 for gray 1 for black 2 for brown
+        self.catcolor = 0 # 0 for gray 1 for black 2 for brown
         self.catprefix = "Assets/sprites/cat/grayCat/"
         self.image = pygame.transform.scale2x(
-            pygame.image.load(f"{self.catprefix}catstand1.png")
+            pygame.image. load(f"{self.catprefix}catstand1.png")
         )  # initialize the image of the cat stationary
         self.image = self.image.convert_alpha()
         self.rect = self.image.get_rect()
-        self.rect.update((myengine.windoww / 2) - 30, (myengine.windowh / 2) - 30, 100, 100)
+        self.rect.update(
+            (myengine.windoww / 2) - 30, (myengine.windowh / 2) - 30, 100, 100
+        )
         self.animiter = 0
         myengine.allvisible.add(self)
         myengine.toanimate.add(self)
-        myengine.haspooped = 0
+        
         self.xv = 0
         self.yv = 0
         self.resetx = 0
         self.resety = 0
-
+        
+    
     def update(self):
         self.rect.move_ip(self.xv, self.yv)
 
@@ -406,7 +684,7 @@ class Player(pygame.sprite.Sprite):
         elif self.catcolor == 1:
             self.catprefix = "Assets/sprites/cat/blackCat/"
         elif self.catcolor == 2:
-            self.catprefix = "Assets/sprites/cat/brownCat/"
+            self.catprefix = "Assets/sprites/cat/brownCat/" 
         else:
             self.catcolor = 0
             self.catprefix = "Assets/sprites/cat/grayCat"
@@ -416,9 +694,9 @@ class Player(pygame.sprite.Sprite):
         self.down = 0
         self.up = 0
         self.idle = 0
-        # this section of logic determines which way the cat should face favoring left and right over up and down
+# this section of logic determines which way the cat should face favoring left and right over up and down
         if self.xv >= 1:
-            self.right = 1
+            self.right = 1  
         if self.yv >= 1:
             self.down = 1
         if self.xv < 0:
@@ -441,50 +719,70 @@ class Player(pygame.sprite.Sprite):
             # handles changing the sprite for animation
             if self.animiter < 3:
 
-                self.image = pygame.transform.scale2x(pygame.image.load(f"{self.catprefix}catleft1.png"))
+                self.image = pygame.transform.scale2x(
+                    pygame.image. load(f"{self.catprefix}catleft1.png")
+                )
                 self.image = self.image.convert_alpha()
             else:
-                self.image = pygame.transform.scale2x(pygame.image.load(f"{self.catprefix}catleft2.png"))
+                self.image = pygame.transform.scale2x(
+                    pygame.image. load(f"{self.catprefix}catleft2.png")
+                )
                 self.image = self.image.convert_alpha()
                 if self.animiter > 4:
                     self.animiter = 0
         if self.right == 1:
             # handles changing the sprite for animation
             if self.animiter < 3:
-                self.image = pygame.transform.scale2x(pygame.image.load(f"{self.catprefix}catright1.png"))
+                self.image = pygame.transform.scale2x(
+                    pygame.image. load(f"{self.catprefix}catright1.png")
+                )
                 self.image = self.image.convert_alpha()
             else:
-                self.image = pygame.transform.scale2x(pygame.image.load(f"{self.catprefix}catright2.png"))
+                self.image = pygame.transform.scale2x(
+                    pygame.image. load(f"{self.catprefix}catright2.png")
+                )
                 self.image = self.image.convert_alpha()
                 if self.animiter > 4:
                     self.animiter = 0
         if self.up == 1:
             # handles changing the sprite for animation
             if self.animiter < 3:
-                self.image = pygame.transform.scale2x(pygame.image.load(f"{self.catprefix}catup1.png"))
+                self.image = pygame.transform.scale2x(
+                    pygame.image. load(f"{self.catprefix}catup1.png")
+                )
                 self.image = self.image.convert_alpha()
             else:
-                self.image = pygame.transform.scale2x(pygame.image.load(f"{self.catprefix}catup2.png"))
+                self.image = pygame.transform.scale2x(
+                    pygame.image. load(f"{self.catprefix}catup2.png")
+                )
                 self.image = self.image.convert_alpha()
                 if self.animiter > 4:
                     self.animiter = 0
         if self.down == 1:
             # handles changing the sprite for animation
             if self.animiter < 3:
-                self.image = pygame.transform.scale2x(pygame.image.load(f"{self.catprefix}catwalkdown1.png"))
+                self.image = pygame.transform.scale2x(
+                    pygame.image. load(f"{self.catprefix}catwalkdown1.png")
+                )
                 self.image = self.image.convert_alpha()
             else:
-                self.image = pygame.transform.scale2x(pygame.image.load(f"{self.catprefix}catwalkdown2.png"))
+                self.image = pygame.transform.scale2x(
+                    pygame.image. load(f"{self.catprefix}catwalkdown2.png")
+                )
                 self.image = self.image.convert_alpha()
                 if self.animiter > 4:
                     self.animiter = 0
         if self.idle == 1:
             # handles changing the sprite for animation this handles idle animations
             if self.animiter < 150:
-                self.image = pygame.transform.scale2x(pygame.image.load(f"{self.catprefix}catstand1.png"))
+                self.image = pygame.transform.scale2x(
+                    pygame.image. load(f"{self.catprefix}catstand1.png")
+                )
                 self.image = self.image.convert_alpha()
             else:
-                self.image = pygame.transform.scale2x(pygame.image.load(f"{self.catprefix}catstand2.png"))
+                self.image = pygame.transform.scale2x(
+                    pygame.image. load(f"{self.catprefix}catstand2.png")
+                )
                 self.image = self.image.convert_alpha()
                 if self.animiter > 158:
                     self.animiter = 0
@@ -492,7 +790,9 @@ class Player(pygame.sprite.Sprite):
 
 class Poop(pygame.sprite.Sprite):
     # this class makes poop objects
-    def __init__(self, catx, caty, image="Assets/sprites/poop1.png"):  # initialize poop object
+    def __init__(
+        self, catx, caty, image="Assets/sprites/poop1.png"
+    ):  # initialize poop object
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load(image)
         self.image = self.image.convert_alpha()
@@ -501,7 +801,7 @@ class Poop(pygame.sprite.Sprite):
         myengine.allvisible.add(self)
         myengine.poopobj.add(self)
         self.used = 0
-        mycat.haspooped = 1
+        myengine.haspooped = 1
 
     def update(self):
         if self.used == 1:
@@ -512,12 +812,34 @@ class fish(pygame.sprite.Sprite):
     # this class makes fish objects
     def __init__(self, tempx, tempy):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load("Assets/sprites/fish1.png")  # init fish sprite with image
+        self.image = pygame.image.load(
+            "Assets/sprites/fish1.png"
+        )  # init fish sprite with image
         self.image = self.image.convert_alpha()
         self.rect = self.image.get_rect()  # init fish recct
         self.rect.update(tempx, tempy, 32, 32)  # place fish
         myengine.fishobj.add(self)  # add to group of fish
         myengine.allvisible.add(self)  # add to group of visible
+
+class stopwatch:
+    def __init__(self):
+        self.starttime = time.time()
+        self.pausedtime = 0
+        self.paused = 0
+    def reset(self):
+        self.startime = time.time()
+    def update(self):
+        if self.paused == 0:
+            self.elapsedsec = (time.time() - self.starttime) - self.pausedtime
+            self.stopwatchmesg = f"time elapsed: {self.elapsedsec:.2f}  seconds"
+        elif self.paused == 1:
+            self.pausedtime = self.pausedtime + (time.time() - self.pausestart)
+    def pause(self):
+        self.pausestart = time.time()
+        self.paused = 1
+    def unpause(self):
+        self.paused = 0
+
 
 
 myengine = Background()
@@ -533,6 +855,4 @@ def main():
         myengine.update_logic()
         myengine.render_screen()
         myengine.clock.tick(60)
-
-
 main()
