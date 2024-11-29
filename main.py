@@ -841,12 +841,9 @@ class stopwatch:
     def update(self):
         if self.paused == 0:
             self.elapsedsec = (time.time() - self.starttime) - self.totalpausedtime
-            print(f"elapsedsec after math {self.elapsedsec} ")
             self.stopwatchmesg = f"time elapsed: {self.elapsedsec:.2f}  seconds"
         elif self.paused == 1:
             self.pausedtime = (time.time() - self.pausestart)
-            print(f"myengine.pausedtime {self.pausedtime}")
-    def pause(self):
         self.pausestart = time.time()
         self.paused = 1
     def unpause(self):
