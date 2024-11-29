@@ -256,14 +256,10 @@ class Engine:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_u:
                         mycat.catcolor = 0
-                        
                     if event.key == pygame.K_i:
                         mycat.catcolor = 1
                     if event.key == pygame.K_o:
                         mycat.catcolor = 2
-                    if event.key == pygame.K_q:
-                        self.winner = 1
-                        self.scoreboard.write(self.stopwatch.elapsedsec)
                     if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                         mycat.xv = -10
                         self.showcontrols = 0
