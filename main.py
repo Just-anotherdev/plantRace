@@ -834,12 +834,14 @@ class stopwatch:
     def __init__(self):
         self.starttime = time.time()
         self.pausedtime = 0
+        self.totalpausedtime = 0
         self.paused = 0
     def reset(self):
         self.startime = time.time()
     def update(self):
         if self.paused == 0:
-            self.elapsedsec = (time.time() - self.starttime) - self.pausedtime
+            self.elapsedsec = (time.time() - self.starttime) - self.totalpausedtime
+            print(f"elapsedsec after math {self.elapsedsec} ")
             self.stopwatchmesg = f"time elapsed: {self.elapsedsec:.2f}  seconds"
         elif self.paused == 1:
             self.pausedtime = (time.time() - self.pausestart)
@@ -848,6 +850,7 @@ class stopwatch:
         self.pausestart = time.time()
         self.paused = 1
     def unpause(self):
+        self.totalpausedtime = self.totalpausedtime + self.pausedtime
         self.paused = 0
 
 
