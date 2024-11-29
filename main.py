@@ -840,6 +840,7 @@ class stopwatch:
             self.stopwatchmesg = f"time elapsed: {self.elapsedsec:.2f}  seconds"
         elif self.paused == 1:
             self.pausedtime = (time.time() - self.pausestart)
+    def pause(self):        
         self.pausestart = time.time()
         self.paused = 1
     def unpause(self):
