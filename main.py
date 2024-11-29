@@ -219,7 +219,7 @@ class Engine:
         if self.mode == 0:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
+                    if event.key == pygame.K_RETURN:
                         self.mode = 1
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -244,7 +244,7 @@ class Engine:
             #show controls
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
+                    if event.key == pygame.K_RETURN:
                         self.stopwatch.reset()
                         self.mode = 3
                         
