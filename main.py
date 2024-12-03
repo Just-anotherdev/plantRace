@@ -53,7 +53,6 @@ class Engine:
             self.winner = 1
         if self.mode == 6:
             if self.mapnum == 3:
-                print("proof this happened self.scoreboard.write(self.stopwatch.totalsec)")
                 self.scoreboard.write(self.stopwatch.totalsec)
                 self.mapnum = self.mapnum + 1
         if self.winner == 1:
