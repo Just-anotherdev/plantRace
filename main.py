@@ -453,7 +453,7 @@ class Background(Engine):
         self.tileprefix = "Assets/tiles/"  # prefix for tile filenames
         self.mapprefix = "Assets/maps/"  # prefix for input map filenames
         self.splashprefix = "Assets/splashscreens/"
-        self.mapdict = {0:"microdemo", 1:"demomap", 2:"DR1map", 3:"pallette"}
+        self.mapdict = {0:"Level1", 1:"Level2", 2:"Level3", 3:"pallette"}
         self.mapnum = 0
         self.generate_bg()
         
