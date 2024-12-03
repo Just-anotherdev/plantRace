@@ -51,15 +51,22 @@ class Engine:
     def test_win(self):
         if self.score >= self.winscore:
             self.winner = 1
-            self.scoreboard.write(self.stopwatch.elapsedsec)
+        if self.mode == 6:
+            if self.mapnum == 3:
+                print("proof this happened self.scoreboard.write(self.stopwatch.totalsec)")
+                self.scoreboard.write(self.stopwatch.totalsec)
+                self.mapnum = self.mapnum + 1
         if self.winner == 1:
             for sprite in self.poopobj:
-                sprite.image = pygame.image.load("Assets/sprites/goldpoop.png")
+                sprite.kill()
             for sprite in self.fishobj:
                 sprite.kill()
-            self.food = 5000
-            self.poodissapear = 0
+            for sprite in self.allvisible:
+                sprite.kill()
+            self.food = 0
             self.mode = 5
+            self.animationtimer = 0
+            
     def init_screen(self):
         self.windowh = 640
         self.windoww = 960
@@ -94,6 +101,7 @@ class Engine:
                     sprite.image,
                     (sprite.rect.x - cameraobj.rect.x, sprite.rect.y - cameraobj.rect.y),
                 )
+            self.screen.blit(mycat.image, (mycat.rect.x - cameraobj.rect.x, mycat.rect.y - cameraobj.rect.y))
                 
             self.render_hud()
         elif self.mode == 4:
@@ -101,11 +109,22 @@ class Engine:
             self.screen.blit(splashscreen,(0,0))
             pass
         elif self.mode == 5:
+            if self.mapnum != 3:
+                if self.winner == 1:
+                    splashscreen = pygame.image.load(f"{self.splashprefix}nextlevel1.png")
+                    self.screen.blit(splashscreen,(0,0))
+                else:
+                    splashscreen = pygame.image.load(f"{self.splashprefix}nextlevel2.png")
+                    self.screen.blit(splashscreen,(0,0))
+
+            
+
+        elif self.mode == 6:
             splashscreen = pygame.image.load(f"{self.splashprefix}winscreen.png")
             self.screen.blit(splashscreen, (0,0))
             self.render_hud()
             #game won
-            pass
+
         
         pygame.display.flip()
         
@@ -132,33 +151,35 @@ class Engine:
             stopwatchmesg = self.basefont.render(self.stopwatch.stopwatchmesg, False, (255, 255, 255))
             self.screen.blit(stopwatchmesg, (50, ((self.windowh / 10) * 9)))
         elif self.mode == 5:
-            if self.winner == 1:
-                winmessage = self.basefont.render("you win! thanks for playing my tech demo!", False, (255, 255, 255))
-                self.screen.blit(winmessage, ((self.windoww / 2) - 180, self.windowh / 2 - 220))
-                self.scoreboard.build()
-                
-                if len(self.scoreboard.top10) >= 1:
-                    self.screen.blit(self.scoreboard.mesg, (((self.windoww /2) - 50), self.windowh / 2 - 180))
-                    self.screen.blit(self.scoreboard.first, (((self.windoww / 2) - 145), self.windowh / 2 - 160))
-                if len(self.scoreboard.top10) >= 2:
-                    self.screen.blit(self.scoreboard.second, (((self.windoww / 2) - 145), self.windowh / 2 - 140))
-                if len(self.scoreboard.top10) >= 3:
-                    self.screen.blit(self.scoreboard.third, (((self.windoww / 2) - 145), self.windowh / 2 - 120))
-                if len(self.scoreboard.top10) >= 4:
-                    self.screen.blit(self.scoreboard.fourth, (((self.windoww / 2) - 145), self.windowh / 2 - 100))
-                if len(self.scoreboard.top10) >= 5:
-                    self.screen.blit(self.scoreboard.fifth, (((self.windoww / 2) - 145), self.windowh / 2 - 80))
-                if len(self.scoreboard.top10) >= 6:
-                    self.screen.blit(self.scoreboard.sixth, (((self.windoww / 2) - 145), self.windowh / 2 - 60))
-                if len(self.scoreboard.top10) >= 7:
-                    self.screen.blit(self.scoreboard.seventh, (((self.windoww / 2) - 145), self.windowh / 2 - 40))
-                if len(self.scoreboard.top10) >= 8:
-                    self.screen.blit(self.scoreboard.eigth, (((self.windoww / 2) - 145), self.windowh / 2 - 20))
-                if len(self.scoreboard.top10) >= 9:
-                    self.screen.blit(self.scoreboard.ninth, (((self.windoww / 2) - 145), self.windowh / 2))
-                if len(self.scoreboard.top10) >= 10:
-                    self.screen.blit(self.scoreboard.tenth, ((((self.windoww / 2) - 145), ((self.windowh / 2) + 20))))
+            pass
+        elif self.mode == 6:
             
+            winmessage = self.basefont.render("you win! thanks for playing my tech demo!", False, (255, 255, 255))
+            self.screen.blit(winmessage, ((self.windoww / 2) - 180, self.windowh / 2 - 220))
+            self.scoreboard.build()
+            
+            if len(self.scoreboard.top10) >= 1:
+                self.screen.blit(self.scoreboard.mesg, (((self.windoww /2) - 50), self.windowh / 2 - 180))
+                self.screen.blit(self.scoreboard.first, (((self.windoww / 2) - 145), self.windowh / 2 - 160))
+            if len(self.scoreboard.top10) >= 2:
+                self.screen.blit(self.scoreboard.second, (((self.windoww / 2) - 145), self.windowh / 2 - 140))
+            if len(self.scoreboard.top10) >= 3:
+                self.screen.blit(self.scoreboard.third, (((self.windoww / 2) - 145), self.windowh / 2 - 120))
+            if len(self.scoreboard.top10) >= 4:
+                self.screen.blit(self.scoreboard.fourth, (((self.windoww / 2) - 145), self.windowh / 2 - 100))
+            if len(self.scoreboard.top10) >= 5:
+                self.screen.blit(self.scoreboard.fifth, (((self.windoww / 2) - 145), self.windowh / 2 - 80))
+            if len(self.scoreboard.top10) >= 6:
+                self.screen.blit(self.scoreboard.sixth, (((self.windoww / 2) - 145), self.windowh / 2 - 60))
+            if len(self.scoreboard.top10) >= 7:
+                self.screen.blit(self.scoreboard.seventh, (((self.windoww / 2) - 145), self.windowh / 2 - 40))
+            if len(self.scoreboard.top10) >= 8:
+                self.screen.blit(self.scoreboard.eigth, (((self.windoww / 2) - 145), self.windowh / 2 - 20))
+            if len(self.scoreboard.top10) >= 9:
+                self.screen.blit(self.scoreboard.ninth, (((self.windoww / 2) - 145), self.windowh / 2))
+            if len(self.scoreboard.top10) >= 10:
+                self.screen.blit(self.scoreboard.tenth, ((((self.windoww / 2) - 145), ((self.windowh / 2) + 20))))
+        
 
     def update_logic(self):
         
@@ -198,14 +219,33 @@ class Engine:
                 self.stopwatch.update()
                 
         elif self.mode == 4:
-            #
-            #
+            #paused
             self.stopwatch.update()
-            #
             pass
         elif self.mode == 5:
-            #won
+            #next level
+            if self.mapnum == 3:    
+                self.mode = 6
+            else:
+                if self.winner == 1:
+                    for sprite in self.allvisible:
+                        sprite.kill()
+                    mycat.xv = 0
+                    mycat.yv = 0
+                    self.toanimate.add(mycat)
+                    mycat.animiter = 0
+                    self.mapnum = self.mapnum + 1
+                    self.stopwatch.reset()
+                    self.generate_bg()
+                    self.init_score()
+                    self.init_bg_frame()
+                    self.winner = 0
+            
+        elif self.mode == 6:
+            self.test_win()
             pass
+            #won
+            
         
     def animate_all(self):
         self.animationtimer = self.animationtimer + 1
@@ -247,13 +287,14 @@ class Engine:
                     if event.key == pygame.K_RETURN:
                         self.stopwatch.reset()
                         self.mode = 3
-                        
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
         elif self.mode == 3:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        self.winner = 1
                     if event.key == pygame.K_u:
                         mycat.catcolor = 0
                     if event.key == pygame.K_i:
@@ -304,7 +345,7 @@ class Engine:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
-        if self.mode == 4:
+        elif self.mode == 4:
                 for event in pygame.event.get():
                     if event.type == pygame.KEYDOWN:
                         if event.key == 27:
@@ -313,11 +354,28 @@ class Engine:
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         quit()
-        if self.mode == 5:
+        elif self.mode == 5:
+            if self.winner == 0:
                 for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                        quit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_RETURN:
+                            self.mode = 3
+                            self.stopwatch.reset()
+            else:
+                for event in pygame.event.get():
+                    if event.key == pygame.K_RETURN:
+                        #dump any presses of enter while we were leading to prevent unexpected behavior
+                        pass
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+            pass
+        elif self.mode == 6:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
 
     def update_fish(self):
         if len(self.fishobj) < len(self.watertiles) * 2:
@@ -396,10 +454,14 @@ class Background(Engine):
         self.tileprefix = "Assets/tiles/"  # prefix for tile filenames
         self.mapprefix = "Assets/maps/"  # prefix for input map filenames
         self.splashprefix = "Assets/splashscreens/"
+        self.mapdict = {0:"microdemo", 1:"demomap", 2:"DR1map", 3:"pallette"}
+        self.mapnum = 0
         self.generate_bg()
-
+        
     def init_bg_frame(self):
         self.bgframe = Bgframe()
+    def mapnum_to_mapname(self):
+        self.mapname = self.mapdict[self.mapnum]
 
     def init_tiles(self, tilename=("finishinit"), x=0, y=0):
         # this function initializes the tileset with the proper states based on tilename
@@ -513,7 +575,8 @@ class Background(Engine):
         self.bgwidth, self.bgheight = bgwidth, bgheight
 
     def generate_bg(self):
-        catchreturn1 = self.map_to_tiles("microdemo")
+        self.mapnum_to_mapname()
+        catchreturn1 = self.map_to_tiles(self.mapname)
         self.tiles_to_full_map(catchreturn1[0], catchreturn1[1], catchreturn1[2])
 
 
@@ -632,6 +695,7 @@ class scoreboard:
                     i = i + 1
                     
     def build(self):
+        self.__init__()
         if len(self.top10) >= 10:
             self.tenth = myengine.basefont.render(f"10). {self.top10[9]}", False, (255, 255, 255))
         if len(self.top10) >= 9:
@@ -832,8 +896,11 @@ class stopwatch:
         self.pausedtime = 0
         self.totalpausedtime = 0
         self.paused = 0
+        self.elapsedsec = 0
+        self.totalsec = 0
     def reset(self):
         self.startime = time.time()
+        self.totalsec = self.totalsec + self.elapsedsec
     def update(self):
         if self.paused == 0:
             self.elapsedsec = (time.time() - self.starttime) - self.totalpausedtime
@@ -848,13 +915,19 @@ class stopwatch:
         self.paused = 0
 
 
-
-myengine = Background()
-mycat = Player()
-cameraobj = Camera()
+def start_game():
+    global myengine
+    global mycat
+    global cameraobj
+    myengine = Background()
+    mycat = Player()
+    cameraobj = Camera()
+    myengine.init_bg_frame()
+    myengine.init_score()
 
 
 def main():
+    start_game()
     myengine.init_bg_frame()
     myengine.init_score()
     while True:
