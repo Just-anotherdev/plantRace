@@ -11,7 +11,9 @@ class Engine:
     def __init__(self):
         pygame.init()  # initialize pygame
         pygame.font.init()  # initialize fonts
-        self.basefont = pygame.font.SysFont("Comic Sans MS", 30)  # finish initializing font
+        self.basefont = pygame.font.SysFont(
+            "Comic Sans MS", 30
+        )  # finish initializing font
         self.stopwatch = stopwatch()
         self.stopwatch.update()
         self.scoreboard = scoreboard()
@@ -65,7 +67,7 @@ class Engine:
             self.food = 0
             self.mode = 5
             self.animationtimer = 0
-            
+
     def init_screen(self):
         self.windowh = 640
         self.windoww = 960
@@ -80,150 +82,220 @@ class Engine:
         self.toanimate = pygame.sprite.Group()
 
     def render_screen(self):
-        
+
         if self.mode == 0:
             splashscreen = pygame.image.load(f"{self.splashprefix}startscreen.png")
-            self.screen.blit(splashscreen, (0,0))
+            self.screen.blit(splashscreen, (0, 0))
         elif self.mode == 1:
             splashscreen = pygame.image.load(f"{self.splashprefix}entername.png")
-            self.screen.blit(splashscreen, (0,0))
+            self.screen.blit(splashscreen, (0, 0))
             self.render_hud()
         elif self.mode == 2:
             splashscreen = pygame.image.load(f"{self.splashprefix}controls.png")
-            self.screen.blit(splashscreen,(0,0))
+            self.screen.blit(splashscreen, (0, 0))
         elif self.mode == 3:
-            
-            #game running
+
+            # game running
             for sprite in self.allvisible:
-                
+
                 self.screen.blit(
                     sprite.image,
-                    (sprite.rect.x - cameraobj.rect.x, sprite.rect.y - cameraobj.rect.y),
+                    (
+                        sprite.rect.x - cameraobj.rect.x,
+                        sprite.rect.y - cameraobj.rect.y,
+                    ),
                 )
-            self.screen.blit(mycat.image, (mycat.rect.x - cameraobj.rect.x, mycat.rect.y - cameraobj.rect.y))
-                
+            self.screen.blit(
+                mycat.image,
+                (mycat.rect.x - cameraobj.rect.x, mycat.rect.y - cameraobj.rect.y),
+            )
+
             self.render_hud()
         elif self.mode == 4:
             splashscreen = pygame.image.load(f"{self.splashprefix}pause.png")
-            self.screen.blit(splashscreen,(0,0))
+            self.screen.blit(splashscreen, (0, 0))
             pass
         elif self.mode == 5:
             if self.mapnum != 3:
                 if self.winner == 1:
-                    splashscreen = pygame.image.load(f"{self.splashprefix}nextlevel1.png")
-                    self.screen.blit(splashscreen,(0,0))
+                    splashscreen = pygame.image.load(
+                        f"{self.splashprefix}nextlevel1.png"
+                    )
+                    self.screen.blit(splashscreen, (0, 0))
                 else:
-                    splashscreen = pygame.image.load(f"{self.splashprefix}nextlevel2.png")
-                    self.screen.blit(splashscreen,(0,0))
-
-            
+                    splashscreen = pygame.image.load(
+                        f"{self.splashprefix}nextlevel2.png"
+                    )
+                    self.screen.blit(splashscreen, (0, 0))
 
         elif self.mode == 6:
             splashscreen = pygame.image.load(f"{self.splashprefix}winscreen.png")
-            self.screen.blit(splashscreen, (0,0))
+            self.screen.blit(splashscreen, (0, 0))
             self.render_hud()
-            #game won
+            # game won
 
-        
         pygame.display.flip()
-        
-        
+
     def render_hud(self):
         if self.mode == 1:
             self.itt.render()
         elif self.mode == 3:
             if self.showcontrols == 1:
-                controlmessage = self.basefont.render("use the arrow keys or wasd to move", False, (255, 255, 255))
-                self.screen.blit(controlmessage, ((self.windoww / 2) - 200, (self.windowh / 2) - 200))
-            elif self.showcontrols == 0 and self.food < 2 and self.score < self.winscore:
-                hungermes = self.basefont.render("you feel hungry", False, (255, 255, 255))
-                self.screen.blit(hungermes, ((self.windoww / 2) - 100, (self.windowh / 2) - 200))
-            elif self.showcontrols == 0 and self.food == 100 and self.score < self.winscore:
+                controlmessage = self.basefont.render(
+                    "use the arrow keys or wasd to move", False, (255, 255, 255)
+                )
+                self.screen.blit(
+                    controlmessage, ((self.windoww / 2) - 200, (self.windowh / 2) - 200)
+                )
+            elif (
+                self.showcontrols == 0 and self.food < 2 and self.score < self.winscore
+            ):
+                hungermes = self.basefont.render(
+                    "you feel hungry", False, (255, 255, 255)
+                )
+                self.screen.blit(
+                    hungermes, ((self.windoww / 2) - 100, (self.windowh / 2) - 200)
+                )
+            elif (
+                self.showcontrols == 0
+                and self.food == 100
+                and self.score < self.winscore
+            ):
                 fullmesg = self.basefont.render("you feel full", False, (255, 255, 255))
-                self.screen.blit(fullmesg, ((self.windoww / 2) - 80, (self.windowh / 2) - 200))
+                self.screen.blit(
+                    fullmesg, ((self.windoww / 2) - 80, (self.windowh / 2) - 200)
+                )
             elif self.showcontrols == 0 and self.food > 2 and self.haspooped == 0:
-                poomesg = self.basefont.render("use spacebar to poop. plants need poop to grow", False, (255, 255, 255))
-                self.screen.blit(poomesg, ((self.windoww / 2) - 250, (self.windowh / 2) - 200))
+                poomesg = self.basefont.render(
+                    "use spacebar to poop. plants need poop to grow",
+                    False,
+                    (255, 255, 255),
+                )
+                self.screen.blit(
+                    poomesg, ((self.windoww / 2) - 250, (self.windowh / 2) - 200)
+                )
             elif self.showcontrols == 0 and self.haspooped == 1:
-                scoremesg = self.basefont.render(f"SCORE: {self.score}  /  {self.winscore}", False, (255, 255, 255))
-                self.screen.blit(scoremesg, ((self.windoww / 2) - 58, (self.windowh / 10)))
-            stopwatchmesg = self.basefont.render(self.stopwatch.stopwatchmesg, False, (255, 255, 255))
+                scoremesg = self.basefont.render(
+                    f"SCORE: {self.score}  /  {self.winscore}", False, (255, 255, 255)
+                )
+                self.screen.blit(
+                    scoremesg, ((self.windoww / 2) - 58, (self.windowh / 10))
+                )
+            stopwatchmesg = self.basefont.render(
+                self.stopwatch.stopwatchmesg, False, (255, 255, 255)
+            )
             self.screen.blit(stopwatchmesg, (50, ((self.windowh / 10) * 9)))
         elif self.mode == 5:
             pass
         elif self.mode == 6:
-            
-            winmessage = self.basefont.render("you win! thanks for playing my tech demo!", False, (255, 255, 255))
-            self.screen.blit(winmessage, ((self.windoww / 2) - 180, self.windowh / 2 - 220))
+
+            winmessage = self.basefont.render(
+                "you win! thanks for playing my tech demo!", False, (255, 255, 255)
+            )
+            self.screen.blit(
+                winmessage, ((self.windoww / 2) - 180, self.windowh / 2 - 220)
+            )
             self.scoreboard.build()
-            
+
             if len(self.scoreboard.top10) >= 1:
-                self.screen.blit(self.scoreboard.mesg, (((self.windoww /2) - 50), self.windowh / 2 - 180))
-                self.screen.blit(self.scoreboard.first, (((self.windoww / 2) - 145), self.windowh / 2 - 160))
+                self.screen.blit(
+                    self.scoreboard.mesg,
+                    (((self.windoww / 2) - 50), self.windowh / 2 - 180),
+                )
+                self.screen.blit(
+                    self.scoreboard.first,
+                    (((self.windoww / 2) - 145), self.windowh / 2 - 160),
+                )
             if len(self.scoreboard.top10) >= 2:
-                self.screen.blit(self.scoreboard.second, (((self.windoww / 2) - 145), self.windowh / 2 - 140))
+                self.screen.blit(
+                    self.scoreboard.second,
+                    (((self.windoww / 2) - 145), self.windowh / 2 - 140),
+                )
             if len(self.scoreboard.top10) >= 3:
-                self.screen.blit(self.scoreboard.third, (((self.windoww / 2) - 145), self.windowh / 2 - 120))
+                self.screen.blit(
+                    self.scoreboard.third,
+                    (((self.windoww / 2) - 145), self.windowh / 2 - 120),
+                )
             if len(self.scoreboard.top10) >= 4:
-                self.screen.blit(self.scoreboard.fourth, (((self.windoww / 2) - 145), self.windowh / 2 - 100))
+                self.screen.blit(
+                    self.scoreboard.fourth,
+                    (((self.windoww / 2) - 145), self.windowh / 2 - 100),
+                )
             if len(self.scoreboard.top10) >= 5:
-                self.screen.blit(self.scoreboard.fifth, (((self.windoww / 2) - 145), self.windowh / 2 - 80))
+                self.screen.blit(
+                    self.scoreboard.fifth,
+                    (((self.windoww / 2) - 145), self.windowh / 2 - 80),
+                )
             if len(self.scoreboard.top10) >= 6:
-                self.screen.blit(self.scoreboard.sixth, (((self.windoww / 2) - 145), self.windowh / 2 - 60))
+                self.screen.blit(
+                    self.scoreboard.sixth,
+                    (((self.windoww / 2) - 145), self.windowh / 2 - 60),
+                )
             if len(self.scoreboard.top10) >= 7:
-                self.screen.blit(self.scoreboard.seventh, (((self.windoww / 2) - 145), self.windowh / 2 - 40))
+                self.screen.blit(
+                    self.scoreboard.seventh,
+                    (((self.windoww / 2) - 145), self.windowh / 2 - 40),
+                )
             if len(self.scoreboard.top10) >= 8:
-                self.screen.blit(self.scoreboard.eigth, (((self.windoww / 2) - 145), self.windowh / 2 - 20))
+                self.screen.blit(
+                    self.scoreboard.eigth,
+                    (((self.windoww / 2) - 145), self.windowh / 2 - 20),
+                )
             if len(self.scoreboard.top10) >= 9:
-                self.screen.blit(self.scoreboard.ninth, (((self.windoww / 2) - 145), self.windowh / 2))
+                self.screen.blit(
+                    self.scoreboard.ninth,
+                    (((self.windoww / 2) - 145), self.windowh / 2),
+                )
             if len(self.scoreboard.top10) >= 10:
-                self.screen.blit(self.scoreboard.tenth, ((((self.windoww / 2) - 145), ((self.windowh / 2) + 20))))
-        
+                self.screen.blit(
+                    self.scoreboard.tenth,
+                    ((((self.windoww / 2) - 145), ((self.windowh / 2) + 20))),
+                )
 
     def update_logic(self):
-        
+
         if self.mode == 0:
-            #title screen
+            # title screen
             pass
         elif self.mode == 1:
-            #enter name
+            # enter name
             self.itt.update()
             pass
         elif self.mode == 2:
-            #show controls
+            # show controls
             pass
         elif self.mode == 3:
-            
+
             self.normalize_velocity()
-            
+
             self.update_fish()
-            
+
             mycat.update()
-            
+
             self.poopobj.update()
-            
+
             self.animate_all()
-            
+
             cameraobj.update()
-            
+
             self.lock_in_bounds()
-            
+
             self.calculate_score()
-            
+
             self.test_win()
-            
+
             self.grow_plants()
-            
+
             if self.winner == 0:
                 self.stopwatch.update()
-                
+
         elif self.mode == 4:
-            #paused
+            # paused
             self.stopwatch.update()
             pass
         elif self.mode == 5:
-            #next level
-            if self.mapnum == 3:    
+            # next level
+            if self.mapnum == 3:
                 self.mode = 6
             else:
                 if self.winner == 1:
@@ -239,13 +311,12 @@ class Engine:
                     self.init_score()
                     self.init_bg_frame()
                     self.winner = 0
-            
+
         elif self.mode == 6:
             self.test_win()
             pass
-            #won
-            
-        
+            # won
+
     def animate_all(self):
         self.animationtimer = self.animationtimer + 1
         if self.animationtimer > 10:
@@ -254,7 +325,7 @@ class Engine:
                 sprite.animate()
 
     def test_keys(self):
-        
+
         if self.mode == 0:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
@@ -264,7 +335,7 @@ class Engine:
                     pygame.quit()
                     quit()
         elif self.mode == 1:
-            #enter name
+            # enter name
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
@@ -280,7 +351,7 @@ class Engine:
                     pygame.quit()
                     quit()
         elif self.mode == 2:
-            #show controls
+            # show controls
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
@@ -315,7 +386,7 @@ class Engine:
                     if event.key == 27:  # escape
                         self.mode = 4
                         self.stopwatch.pause()
-                        
+
                     elif event.key == 32:  # spacebar
                         if self.food > 0:
                             self.food = self.food - 1
@@ -345,14 +416,14 @@ class Engine:
                     pygame.quit()
                     quit()
         elif self.mode == 4:
-                for event in pygame.event.get():
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == 27:
-                            self.mode = 3
-                            self.stopwatch.unpause()
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                        quit()
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == 27:
+                        self.mode = 3
+                        self.stopwatch.unpause()
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
         elif self.mode == 5:
             if self.winner == 0:
                 for event in pygame.event.get():
@@ -360,15 +431,20 @@ class Engine:
                         if event.key == pygame.K_RETURN:
                             self.mode = 3
                             self.stopwatch.reset()
+                    elif event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+                    
             else:
                 for event in pygame.event.get():
-                    if event.key == pygame.K_RETURN:
-                        #dump any presses of enter while we were leading to prevent unexpected behavior
+                    if event.type == pygame.KEYDOWN:
+                    
+                        # dump any presses of keys while we were leading to prevent unexpected behavior
                         pass
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
+
+                    elif event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
             pass
         elif self.mode == 6:
             for event in pygame.event.get():
@@ -381,7 +457,7 @@ class Engine:
             for sprite in self.tileset:
                 sprite.populate_fish()
         for e in self.fishobj:
-            if e.rect.colliderect(mycat.rect) == True:
+            if e.rect.colliderect(mycat.rect) is True:
                 if self.food < 100:
                     self.food = self.food + 1
                     e.kill()
@@ -439,13 +515,18 @@ class Camera(pygame.sprite.Sprite):
 class interactivetextbox(pygame.sprite.Sprite):
     def __init__(self):
         pass
+
     def render(self):
-        myengine.screen.blit(self.image,self.rect)
+        myengine.screen.blit(self.image, self.rect)
+
     def update(self):
-        self.image = myengine.basefont.render("".join(myengine.stringbuffer), False , (255, 255, 255))
+        self.image = myengine.basefont.render(
+            "".join(myengine.stringbuffer), False, (255, 255, 255)
+        )
         self.rect = self.image.get_rect()
         self.rect.center = (myengine.windoww / 2, myengine.windowh / 2)
         pass
+
 
 class Background(Engine):
     def __init__(self):
@@ -453,12 +534,13 @@ class Background(Engine):
         self.tileprefix = "Assets/tiles/"  # prefix for tile filenames
         self.mapprefix = "Assets/maps/"  # prefix for input map filenames
         self.splashprefix = "Assets/splashscreens/"
-        self.mapdict = {0:"Level1", 1:"Level2", 2:"Level3", 3:"pallette"}
+        self.mapdict = {0: "Level1", 1: "Level2", 2: "Level3", 3: "pallette"}
         self.mapnum = 0
         self.generate_bg()
-        
+
     def init_bg_frame(self):
         self.bgframe = Bgframe()
+
     def mapnum_to_mapname(self):
         self.mapname = self.mapdict[self.mapnum]
 
@@ -652,6 +734,7 @@ class Bgframe(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.rect = pygame.Rect(0, 0, myengine.bgwidth, myengine.bgheight)
 
+
 class scoreboard:
     def __init__(self):
         with open("Assets/saves/sb.scoreboard", "r") as scoreboard:
@@ -661,7 +744,10 @@ class scoreboard:
                 unsortedScoreboard.append(base64.standard_b64decode(i).decode())
             self.unsortedscoreboard = unsortedScoreboard
             self.sortedscoreboard = sorted(
-                unsortedScoreboard, key=lambda test_string: list(map(int, re.findall(r"\d+", test_string)))[0]
+                unsortedScoreboard,
+                key=lambda test_string: list(map(int, re.findall(r"\d+", test_string)))[
+                    0
+                ],
             )
             self.top10 = []
             i = 0
@@ -671,7 +757,9 @@ class scoreboard:
                     i = i + 1
 
     def write(self, timelapsed):
-        winning_stopwatch = f"{myengine.playername}  {myengine.stopwatch.elapsedsec:.2f} seconds"
+        winning_stopwatch = (
+            f"{myengine.playername}  {myengine.stopwatch.elapsedsec:.2f} seconds"
+        )
         winning_stopwatch = winning_stopwatch.encode("utf-8")
         with open("Assets/saves/sb.scoreboard", "a") as scoreboard:
             b64winning_stopwatch = base64.standard_b64encode(winning_stopwatch)
@@ -684,7 +772,10 @@ class scoreboard:
                 unsortedScoreboard.append(base64.standard_b64decode(i).decode())
             self.unsortedscoreboard = unsortedScoreboard
             self.sortedscoreboard = sorted(
-                unsortedScoreboard, key=lambda test_string: list(map(int, re.findall(r"\d+", test_string)))[0]
+                unsortedScoreboard,
+                key=lambda test_string: list(map(int, re.findall(r"\d+", test_string)))[
+                    0
+                ],
             )
             self.top10 = []
             i = 0
@@ -692,41 +783,59 @@ class scoreboard:
                 if i <= 9:
                     self.top10.append(score)
                     i = i + 1
-                    
+
     def build(self):
         self.__init__()
         if len(self.top10) >= 10:
-            self.tenth = myengine.basefont.render(f"10). {self.top10[9]}", False, (255, 255, 255))
+            self.tenth = myengine.basefont.render(
+                f"10). {self.top10[9]}", False, (255, 255, 255)
+            )
         if len(self.top10) >= 9:
-            self.ninth = myengine.basefont.render(f"9). {self.top10[8]}", False, (255, 255, 255))
+            self.ninth = myengine.basefont.render(
+                f"9). {self.top10[8]}", False, (255, 255, 255)
+            )
         if len(self.top10) >= 8:
-            self.eigth = myengine.basefont.render(f"8). {self.top10[7]}", False, (255, 255, 255))
+            self.eigth = myengine.basefont.render(
+                f"8). {self.top10[7]}", False, (255, 255, 255)
+            )
         if len(self.top10) >= 7:
-            self.seventh = myengine.basefont.render(f"7). {self.top10[6]}", False, (255, 255, 255))
+            self.seventh = myengine.basefont.render(
+                f"7). {self.top10[6]}", False, (255, 255, 255)
+            )
         if len(self.top10) >= 6:
-            self.sixth = myengine.basefont.render(f"6). {self.top10[5]}", False, (255, 255, 255))
+            self.sixth = myengine.basefont.render(
+                f"6). {self.top10[5]}", False, (255, 255, 255)
+            )
         if len(self.top10) >= 5:
-            self.fifth = myengine.basefont.render(f"5). {self.top10[4]}", False, (255, 255, 255))
+            self.fifth = myengine.basefont.render(
+                f"5). {self.top10[4]}", False, (255, 255, 255)
+            )
         if len(self.top10) >= 4:
-            self.fourth = myengine.basefont.render(f"4). {self.top10[3]}", False, (255, 255, 255))
+            self.fourth = myengine.basefont.render(
+                f"4). {self.top10[3]}", False, (255, 255, 255)
+            )
         if len(self.top10) >= 3:
-            self.third = myengine.basefont.render(f"3). {self.top10[2]}", False, (255, 255, 255))
+            self.third = myengine.basefont.render(
+                f"3). {self.top10[2]}", False, (255, 255, 255)
+            )
         if len(self.top10) >= 2:
-            self.second = myengine.basefont.render(f"2). {self.top10[1]}", False, (255, 255, 255))
+            self.second = myengine.basefont.render(
+                f"2). {self.top10[1]}", False, (255, 255, 255)
+            )
         if len(self.top10) >= 1:
-            self.mesg = myengine.basefont.render("SCOREBOARD", False, (255,255,255))
-            self.first = myengine.basefont.render(f"1). {self.top10[0]}", False, (255, 255, 255))
-
-
+            self.mesg = myengine.basefont.render("SCOREBOARD", False, (255, 255, 255))
+            self.first = myengine.basefont.render(
+                f"1). {self.top10[0]}", False, (255, 255, 255)
+            )
 
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)  # initialize sprite
-        self.catcolor = 0 # 0 for gray 1 for black 2 for brown
+        self.catcolor = 0  # 0 for gray 1 for black 2 for brown
         self.catprefix = "Assets/sprites/cat/grayCat/"
         self.image = pygame.transform.scale2x(
-            pygame.image. load(f"{self.catprefix}catstand1.png")
+            pygame.image.load(f"{self.catprefix}catstand1.png")
         )  # initialize the image of the cat stationary
         self.image = self.image.convert_alpha()
         self.rect = self.image.get_rect()
@@ -736,13 +845,12 @@ class Player(pygame.sprite.Sprite):
         self.animiter = 0
         myengine.allvisible.add(self)
         myengine.toanimate.add(self)
-        
+
         self.xv = 0
         self.yv = 0
         self.resetx = 0
         self.resety = 0
-        
-    
+
     def update(self):
         self.rect.move_ip(self.xv, self.yv)
 
@@ -752,7 +860,7 @@ class Player(pygame.sprite.Sprite):
         elif self.catcolor == 1:
             self.catprefix = "Assets/sprites/cat/blackCat/"
         elif self.catcolor == 2:
-            self.catprefix = "Assets/sprites/cat/brownCat/" 
+            self.catprefix = "Assets/sprites/cat/brownCat/"
         else:
             self.catcolor = 0
             self.catprefix = "Assets/sprites/cat/grayCat"
@@ -762,9 +870,9 @@ class Player(pygame.sprite.Sprite):
         self.down = 0
         self.up = 0
         self.idle = 0
-# this section of logic determines which way the cat should face favoring left and right over up and down
+        # this section of logic determines which way the cat should face favoring left and right over up and down
         if self.xv >= 1:
-            self.right = 1  
+            self.right = 1
         if self.yv >= 1:
             self.down = 1
         if self.xv < 0:
@@ -788,12 +896,12 @@ class Player(pygame.sprite.Sprite):
             if self.animiter < 3:
 
                 self.image = pygame.transform.scale2x(
-                    pygame.image. load(f"{self.catprefix}catleft1.png")
+                    pygame.image.load(f"{self.catprefix}catleft1.png")
                 )
                 self.image = self.image.convert_alpha()
             else:
                 self.image = pygame.transform.scale2x(
-                    pygame.image. load(f"{self.catprefix}catleft2.png")
+                    pygame.image.load(f"{self.catprefix}catleft2.png")
                 )
                 self.image = self.image.convert_alpha()
                 if self.animiter > 4:
@@ -802,12 +910,12 @@ class Player(pygame.sprite.Sprite):
             # handles changing the sprite for animation
             if self.animiter < 3:
                 self.image = pygame.transform.scale2x(
-                    pygame.image. load(f"{self.catprefix}catright1.png")
+                    pygame.image.load(f"{self.catprefix}catright1.png")
                 )
                 self.image = self.image.convert_alpha()
             else:
                 self.image = pygame.transform.scale2x(
-                    pygame.image. load(f"{self.catprefix}catright2.png")
+                    pygame.image.load(f"{self.catprefix}catright2.png")
                 )
                 self.image = self.image.convert_alpha()
                 if self.animiter > 4:
@@ -816,12 +924,12 @@ class Player(pygame.sprite.Sprite):
             # handles changing the sprite for animation
             if self.animiter < 3:
                 self.image = pygame.transform.scale2x(
-                    pygame.image. load(f"{self.catprefix}catup1.png")
+                    pygame.image.load(f"{self.catprefix}catup1.png")
                 )
                 self.image = self.image.convert_alpha()
             else:
                 self.image = pygame.transform.scale2x(
-                    pygame.image. load(f"{self.catprefix}catup2.png")
+                    pygame.image.load(f"{self.catprefix}catup2.png")
                 )
                 self.image = self.image.convert_alpha()
                 if self.animiter > 4:
@@ -830,12 +938,12 @@ class Player(pygame.sprite.Sprite):
             # handles changing the sprite for animation
             if self.animiter < 3:
                 self.image = pygame.transform.scale2x(
-                    pygame.image. load(f"{self.catprefix}catwalkdown1.png")
+                    pygame.image.load(f"{self.catprefix}catwalkdown1.png")
                 )
                 self.image = self.image.convert_alpha()
             else:
                 self.image = pygame.transform.scale2x(
-                    pygame.image. load(f"{self.catprefix}catwalkdown2.png")
+                    pygame.image.load(f"{self.catprefix}catwalkdown2.png")
                 )
                 self.image = self.image.convert_alpha()
                 if self.animiter > 4:
@@ -844,12 +952,12 @@ class Player(pygame.sprite.Sprite):
             # handles changing the sprite for animation this handles idle animations
             if self.animiter < 150:
                 self.image = pygame.transform.scale2x(
-                    pygame.image. load(f"{self.catprefix}catstand1.png")
+                    pygame.image.load(f"{self.catprefix}catstand1.png")
                 )
                 self.image = self.image.convert_alpha()
             else:
                 self.image = pygame.transform.scale2x(
-                    pygame.image. load(f"{self.catprefix}catstand2.png")
+                    pygame.image.load(f"{self.catprefix}catstand2.png")
                 )
                 self.image = self.image.convert_alpha()
                 if self.animiter > 158:
@@ -889,6 +997,7 @@ class fish(pygame.sprite.Sprite):
         myengine.fishobj.add(self)  # add to group of fish
         myengine.allvisible.add(self)  # add to group of visible
 
+
 class stopwatch:
     def __init__(self):
         self.starttime = time.time()
@@ -897,18 +1006,22 @@ class stopwatch:
         self.paused = 0
         self.elapsedsec = 0
         self.totalsec = 0
+
     def reset(self):
         self.startime = time.time()
         self.totalsec = self.totalsec + self.elapsedsec
+
     def update(self):
         if self.paused == 0:
             self.elapsedsec = (time.time() - self.starttime) - self.totalpausedtime
             self.stopwatchmesg = f"time elapsed: {self.elapsedsec:.2f}  seconds"
         elif self.paused == 1:
-            self.pausedtime = (time.time() - self.pausestart)
-    def pause(self):        
+            self.pausedtime = time.time() - self.pausestart
+
+    def pause(self):
         self.pausestart = time.time()
         self.paused = 1
+
     def unpause(self):
         self.totalpausedtime = self.totalpausedtime + self.pausedtime
         self.paused = 0
@@ -934,4 +1047,6 @@ def main():
         myengine.update_logic()
         myengine.render_screen()
         myengine.clock.tick(60)
+
+
 main()
