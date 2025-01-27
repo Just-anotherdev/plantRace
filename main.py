@@ -662,7 +662,7 @@ class CellularAutomata:
         self.workgrid[x - 1][y - 1].set_value(7)
         self.workgrid[x + 1][y - 1].set_value(7)
         self.workgrid[x - 1][y + 1].set_value(7)
-        print(f"pond deployed at {x}, {y}")
+        #print(f"pond deployed at {x}, {y}")
 
     def convert_to_tilenames(self):
         self.tilegrid = []
