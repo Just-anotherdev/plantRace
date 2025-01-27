@@ -1,11 +1,15 @@
-import random
-import pygame
-import numpy as np
-from PIL import Image
-import time
 import base64
+import random
 import re
+from time import time
 
+import numpy as np
+import pygame
+from PIL import Image
+
+
+#TODO untangle what I can reasonably keep in the engine class and take from the background class
+#TODO and make this a module instead of a part of the main script so it can be reused fo rother games
 
 class Engine:
     def __init__(self):
@@ -14,9 +18,12 @@ class Engine:
         self.basefont = pygame.font.SysFont(
             "Comic Sans MS", 30
         )  # finish initializing font
+        self.tileprefix = "Assets/tiles/"  # prefix for tile filenames
+        self.mapprefix = "Assets/maps/"  # prefix for input map filenames
+        self.splashprefix = "Assets/splashscreens/"
         self.stopwatch = stopwatch()
         self.stopwatch.update()
-        self.scoreboard = scoreboard()
+        self.scoreboard = Scoreboard()
         self.init_groups()
         self.init_screen()
         self.poodissapear = 1
@@ -27,7 +34,7 @@ class Engine:
         self.animationtimer = 0
         self.growtimer = 0
         self.winner = 0
-        self.starttime = time.time()
+        self.starttime = time()
         self.showcontrols = 1
         self.winscore = 0
         self.haspooped = 0
@@ -44,9 +51,9 @@ class Engine:
                 self.mapscore = self.mapscore + 1
         for sprite in self.tileset:
             if (
-                sprite.tilename == "plant1stage1wet"
-                or sprite.tilename == "plant1stage2wet"
-                or sprite.tilename == "dirtwet"
+                    sprite.tilename == "plant1stage1wet"
+                    or sprite.tilename == "plant1stage2wet"
+                    or sprite.tilename == "dirtwet"
             ):
                 self.winscore = self.winscore + 1
 
@@ -54,7 +61,7 @@ class Engine:
         if self.score >= self.winscore:
             self.winner = 1
         if self.mode == 6:
-            if self.mapnum == 3:
+            if self.mapnum >= 3:
                 self.scoreboard.write(self.stopwatch.totalsec)
                 self.mapnum = self.mapnum + 1
         if self.winner == 1:
@@ -97,7 +104,6 @@ class Engine:
 
             # game running
             for sprite in self.allvisible:
-
                 self.screen.blit(
                     sprite.image,
                     (
@@ -148,7 +154,7 @@ class Engine:
                     controlmessage, ((self.windoww / 2) - 200, (self.windowh / 2) - 200)
                 )
             elif (
-                self.showcontrols == 0 and self.food < 2 and self.score < self.winscore
+                    self.showcontrols == 0 and self.food < 2 and self.score < self.winscore
             ):
                 hungermes = self.basefont.render(
                     "you feel hungry", False, (255, 255, 255)
@@ -157,9 +163,9 @@ class Engine:
                     hungermes, ((self.windoww / 2) - 100, (self.windowh / 2) - 200)
                 )
             elif (
-                self.showcontrols == 0
-                and self.food == 100
-                and self.score < self.winscore
+                    self.showcontrols == 0
+                    and self.food == 100
+                    and self.score < self.winscore
             ):
                 fullmesg = self.basefont.render("you feel full", False, (255, 255, 255))
                 self.screen.blit(
@@ -249,7 +255,7 @@ class Engine:
             if len(self.scoreboard.top10) >= 10:
                 self.screen.blit(
                     self.scoreboard.tenth,
-                    ((((self.windoww / 2) - 145), ((self.windowh / 2) + 20))),
+                    (((self.windoww / 2) - 145), ((self.windowh / 2) + 20)),
                 )
 
     def update_logic(self):
@@ -308,12 +314,13 @@ class Engine:
                     self.mapnum = self.mapnum + 1
                     self.stopwatch.reset()
                     self.generate_bg()
+                    mycat.reset(self.ca.catbedx)
                     self.init_score()
                     self.init_bg_frame()
                     self.winner = 0
 
         elif self.mode == 6:
-            self.test_win()
+            #self.test_win()
             pass
             # won
 
@@ -356,6 +363,7 @@ class Engine:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         self.stopwatch.reset()
+
                         self.mode = 3
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -434,11 +442,11 @@ class Engine:
                     elif event.type == pygame.QUIT:
                         pygame.quit()
                         quit()
-                    
+
             else:
                 for event in pygame.event.get():
                     if event.type == pygame.KEYDOWN:
-                    
+
                         # dump any presses of keys while we were leading to prevent unexpected behavior
                         pass
 
@@ -514,7 +522,7 @@ class Camera(pygame.sprite.Sprite):
 
 class interactivetextbox(pygame.sprite.Sprite):
     def __init__(self):
-        pass
+        super().__init__()
 
     def render(self):
         myengine.screen.blit(self.image, self.rect)
@@ -524,16 +532,202 @@ class interactivetextbox(pygame.sprite.Sprite):
             "".join(myengine.stringbuffer), False, (255, 255, 255)
         )
         self.rect = self.image.get_rect()
-        self.rect.center = (myengine.windoww / 2, myengine.windowh / 2)
-        pass
+        self.rect.center = (int(myengine.windoww / 2), int(myengine.windowh / 2))
 
+class CellularAutomata:
+    def __init__(self, xtiles=10, ytiles=10):
+        self.workgrid = None
+        self.currentrow = None
+        self.currentcell = None
+        self.catbedx = None
+        self.tileswide = xtiles
+        self.tilestall = ytiles
+        self.conversiondict = {0: "catbeddry",
+                               1: "dirtuntilled",
+                               2: "dirtwet",
+                               3: "grass1",
+                               4: "plant1stage1wet",
+                               5: "plant1stage2wet",
+                               6: "plant1stage3wet",
+                               7: "water", }
+        self.init_grid()
+        self.generate_full_grid()
+        self.convert_to_tilenames()
+
+    def init_grid(self):
+        self.workgrid = []
+        while len(self.workgrid) < self.tilestall:
+            self.init_row()
+            self.workgrid.append(self.currentrow)
+    def init_row(self):
+        self.currentrow = []
+        while len(self.currentrow) < self.tileswide:
+            self.init_cell()
+            self.currentrow.append(self.currentcell)
+
+    def init_cell(self):
+        self.currentcell = Cell()
+
+    def generate_top_row(self):
+        for e in self.workgrid[0]:
+            e.random_fill()
+            tempint = random.randrange(1, self.tileswide)
+        self.workgrid[0][tempint].set_value(0)
+        self.catbedx = (tempint * 200) + 100
+    def set_neighbors_row(self,rownum):
+        i = 0
+        lastcell = None
+        lastvalue = None
+        for e in self.workgrid[rownum]:
+            if lastcell is not None:
+                lastcell.set_rightneighbor(e.value)
+            e.set_leftneighbor(lastvalue)
+            lastvalue = e.value
+            self.workgrid[1][i].set_topneighbor(e.value)
+            self.workgrid[1][i].set_topleftneighbor(lastvalue)
+            lastcell = e
+            i = i + 1
+        lastcell = None
+        lastvalue = None
+        i = 0
+        for e in self.workgrid[1]:
+            if i > 0:
+                e.set_topleftneighbor(self.workgrid[rownum][i - 1].value)
+            if i < self.tileswide - 1 :
+                e.set_toprightneighbor(self.workgrid[rownum][i + 1].value)
+            e.set_topneighbor(self.workgrid[rownum][i].value)
+            lastcell = e
+            lastvalue = e.value
+            i = i + 1
+    def set_all_neighbors(self):
+        i = 0
+        for e in self.workgrid:
+            self.set_neighbors_row(i)
+            i = i + 1
+
+    def generatenextrow(self, rownum):
+        for e in self.workgrid[rownum]:
+            if e.topneighbor is not None and e.topleftneighbor is not None and e.toprightneighbor is not None:
+                #make a list containing each of the top neighbors, add grass water and wet dirt and plant1stage1 then randomly pick from the list
+                workinglist =  [4, 7]
+                workinglist.extend([e.topleftneighbor, e.toprightneighbor, e.topneighbor])
+                if 0 in workinglist:
+                    workinglist.remove(0)
+                    workinglist.append(7)
+                e.set_value(random.choice(workinglist
+                                          ))
+            else:
+                workinglist = [2, 3, 4, 7]
+                if e.topneighbor is not None:
+                    workinglist.append([e.topneighbor])
+                e.set_value(random.choice(workinglist))
+    def generate_full_grid(self):
+        self.generate_top_row()
+        self.set_neighbors_row(1)
+        i = 1
+        while i < self.tilestall:
+            self.generatenextrow(i)
+            if i < self.tilestall- 1:
+                self.set_neighbors_row(i + 1)
+            i = i + 1
+    def getallvalues(self):
+        tempgrid = []
+        for e in self.workgrid:
+            templist = []
+            for f in e:
+                templist.append(f.value)
+            tempgrid.append(templist)
+        return tempgrid
+
+    def make_pond(self):
+        self.ponds = self.ponds + 1
+        if self.tileswide > 10:
+            x = random.randrange(5, (self.tileswide - 5))
+        else:
+            x = 5
+        if self.tilestall > 10:
+            y = random.randrange(5, (self.tilestall - 5))
+        else:
+            y = 5
+        self.workgrid[x][y].set_value(7)
+        self.workgrid[x - 1][y].set_value(7)
+        self.workgrid[x + 1][y].set_value(7)
+        self.workgrid[x - 2][y].set_value(7)
+        self.workgrid[x + 2][y].set_value(7)
+        self.workgrid[x][y + 1].set_value(7)
+        self.workgrid[x][y - 1].set_value(7)
+        self.workgrid[x][y + 2].set_value(7)
+        self.workgrid[x][y - 2].set_value(7)
+        self.workgrid[x + 1][y + 1].set_value(7)
+        self.workgrid[x - 1][y - 1].set_value(7)
+        self.workgrid[x + 1][y - 1].set_value(7)
+        self.workgrid[x - 1][y + 1].set_value(7)
+        #print(f"pond deployed at {x}, {y}")
+
+    def convert_to_tilenames(self):
+        self.tilegrid = []
+        for e in self.workgrid:
+            for f in e:
+                self.tilegrid.append(self.conversiondict[f.value])
+
+    def reset(self, mapnum):
+        self.ponds = 0
+        self.workgrid = None
+        self.currentrow = None
+        self.currentcell = None
+        self.catbedx = None
+        self.tilegrid = []
+        self.tileswide = 10 * (mapnum + 1)
+        self.tilestall = 10 * (mapnum + 1)
+        self.init_grid()
+        self.generate_full_grid()
+        while self.ponds < mapnum * 3:
+            self.make_pond()
+        self.convert_to_tilenames()
+
+
+
+
+
+
+
+class Cell:
+    def __init__(self):
+        self.value = None
+        self.leftneighbor = None
+        self.rightneighbor = None
+        self.topneighbor = None
+        self.bottomneighbor = None
+        self.topleftneighbor = None
+        self.toprightneighbor = None
+        self.bottomleftneighbor = None
+        self.bottomrightneighbor = None
+
+    def random_fill(self):
+        self.value = random.choice([2,3,4,7])
+
+    def set_value(self, newvalue):
+        self.value = newvalue
+
+    def set_topneighbor(self, neighborvalue):
+        self.topneighbor = neighborvalue
+
+    def set_leftneighbor(self, neighborvalue):
+        self.leftneighbor = neighborvalue
+
+    def set_rightneighbor(self, neighborvalue):
+        self.rightneighbor = neighborvalue
+
+    def set_topleftneighbor(self, neighborvalue):
+        self.topleftneighbor = neighborvalue
+
+    def set_toprightneighbor(self, neighborvalue):
+        self.toprightneighbor = neighborvalue
 
 class Background(Engine):
     def __init__(self):
         super().__init__()
-        self.tileprefix = "Assets/tiles/"  # prefix for tile filenames
-        self.mapprefix = "Assets/maps/"  # prefix for input map filenames
-        self.splashprefix = "Assets/splashscreens/"
+        self.ca = CellularAutomata()
         self.mapdict = {0: "Level1", 1: "Level2", 2: "Level3", 3: "pallette"}
         self.mapnum = 0
         self.generate_bg()
@@ -547,13 +741,13 @@ class Background(Engine):
     def init_tiles(self, tilename=("finishinit"), x=0, y=0):
         # this function initializes the tileset with the proper states based on tilename
         assert (
-            type(tilename) is str
+                type(tilename) is str
         ), "check input to inittiles tilename must be a string"
         assert (
-            type(x) is int and type(y) is int
+                type(x) is int and type(y) is int
         ), "check input to inittiles x and y must be positive ints"
         assert (
-            x >= 0 and y >= 0
+                x >= 0 and y >= 0
         ), "check input to inittiles x and y must be positive ints"
         if tilename == "catbeddry":
             Tile("catbeddry", f"{self.tileprefix}catbeddry.png", x, y, self)
@@ -611,10 +805,10 @@ class Background(Engine):
         temparray = []  # initialize a temporary array to pop from
         rgbvalues = []  # flat array of tuples representing rgb values
         for (
-            m
+                m
         ) in (
-            img
-        ):  # loop through the 3d numpy array to extract an 1d array of tuples of rgb values
+                img
+        ):  # loop through the 3d numpy array to extract a 1d array of tuples of rgb values
             for n in m:
                 for o in n:
                     if p < 3:
@@ -623,8 +817,7 @@ class Background(Engine):
                     else:
                         p = 1
                         rgbvalues.append(tuple(temparray))
-                        temparray = []
-                        temparray.append(o)
+                        temparray = [o]
         rgbvalues.append(tuple(temparray))
         temparray = []
         for x in rgbvalues:  # convert the array to an array of tile file names
@@ -638,6 +831,7 @@ class Background(Engine):
         tilewidth = 200  # the width in pixels of the tiles
         tileheight = 200  # the width in pixels of the tiles
         j = 1
+        i = 0
         witer = 0
         hiter = 0
         bgwidth = numofcols * tilewidth
@@ -645,27 +839,30 @@ class Background(Engine):
         iterlist = [0] * len(listoftiles)
         for e in iterlist:
             if j < numofcols:
-                self.init_tiles(listoftiles.pop(0), witer, hiter)
+                self.init_tiles(listoftiles[i], witer, hiter)
                 witer = witer + tilewidth
+
             else:
-                self.init_tiles(listoftiles.pop(0), witer, hiter)
+                self.init_tiles(listoftiles[i], witer, hiter)
                 witer = 0
                 j = 0
                 hiter = hiter + tileheight
             j = j + 1
+            i = i + 1
         self.bgwidth, self.bgheight = bgwidth, bgheight
 
     def generate_bg(self):
-        self.mapnum_to_mapname()
-        catchreturn1 = self.map_to_tiles(self.mapname)
-        self.tiles_to_full_map(catchreturn1[0], catchreturn1[1], catchreturn1[2])
+        if self.mapnum > 0:
+            self.ca.reset(self.mapnum)
+        self.tiles_to_full_map(self.ca.tilegrid, self.ca.tileswide, self.ca.tilestall)
 
 
 class Tile(pygame.sprite.Sprite, Background):
     def __init__(self, tilename, image_file, posx, posy, engine):
+        super().__init__()
         assert type(tilename) is str, "tilename must be a string"
         assert (
-            type(posx) is int and type(posy) is int and posx >= 0 and posy >= 0
+                type(posx) is int and type(posy) is int and posx >= 0 and posy >= 0
         ), "posx and posy must be positivve ints"
         self.tilename = tilename
         pygame.sprite.Sprite.__init__(self)  # call Sprite initializer
@@ -726,25 +923,25 @@ class Bgframe(pygame.sprite.Sprite):
     # makes a rect around the background for collision detection
     def __init__(self):
         assert (
-            type(myengine.bgwidth) is int and type(myengine.bgheight) is int
+                type(myengine.bgwidth) is int and type(myengine.bgheight) is int
         ), "Bgframe requires bgheight and bgwidth to be non zero positive ints"
         assert (
-            myengine.bgwidth > 0 and myengine.bgheight > 0
+                myengine.bgwidth > 0 and myengine.bgheight > 0
         ), "Bgframe requires bgheight and bgwidth to be non zero positive ints"
         pygame.sprite.Sprite.__init__(self)
         self.rect = pygame.Rect(0, 0, myengine.bgwidth, myengine.bgheight)
 
 
-class scoreboard:
+class Scoreboard:
     def __init__(self):
         with open("Assets/saves/sb.scoreboard", "r") as scoreboard:
             scoreboard_b64_list = scoreboard.readlines()
-            unsortedScoreboard = []
+            unsortedscoreboard = []
             for i in scoreboard_b64_list:
-                unsortedScoreboard.append(base64.standard_b64decode(i).decode())
-            self.unsortedscoreboard = unsortedScoreboard
+                unsortedscoreboard.append(base64.standard_b64decode(i).decode())
+            self.unsortedscoreboard = unsortedscoreboard
             self.sortedscoreboard = sorted(
-                unsortedScoreboard,
+                unsortedscoreboard,
                 key=lambda test_string: list(map(int, re.findall(r"\d+", test_string)))[
                     0
                 ],
@@ -829,8 +1026,9 @@ class scoreboard:
             )
 
 
+# noinspection PyTypeChecker
 class Player(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, spawnx):
         pygame.sprite.Sprite.__init__(self)  # initialize sprite
         self.catcolor = 0  # 0 for gray 1 for black 2 for brown
         self.catprefix = "Assets/sprites/cat/grayCat/"
@@ -839,9 +1037,8 @@ class Player(pygame.sprite.Sprite):
         )  # initialize the image of the cat stationary
         self.image = self.image.convert_alpha()
         self.rect = self.image.get_rect()
-        self.rect.update(
-            (myengine.windoww / 2) - 30, (myengine.windowh / 2) - 30, 100, 100
-        )
+        self.rect.center = (
+           spawnx , 100)
         self.animiter = 0
         myengine.allvisible.add(self)
         myengine.toanimate.add(self)
@@ -962,19 +1159,25 @@ class Player(pygame.sprite.Sprite):
                 self.image = self.image.convert_alpha()
                 if self.animiter > 158:
                     self.animiter = 0
-
+    def reset(self, spawnx):
+        self.rect.center = (
+            spawnx, 100)
+        self.xv = 0
+        self.yv = 0
 
 class Poop(pygame.sprite.Sprite):
     # this class makes poop objects
     def __init__(
-        self, catx, caty, image="Assets/sprites/poop1.png"
+            self, catx, caty, image="Assets/sprites/poop1.png"
     ):  # initialize poop object
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load(image)
         self.image = self.image.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.update((catx + 50), (caty + 50), 32, 32)  # places the poop at the cat
+        # noinspection PyTypeChecker
         myengine.allvisible.add(self)
+        # noinspection PyTypeChecker
         myengine.poopobj.add(self)
         self.used = 0
         myengine.haspooped = 1
@@ -986,6 +1189,7 @@ class Poop(pygame.sprite.Sprite):
 
 class fish(pygame.sprite.Sprite):
     # this class makes fish objects
+    # noinspection PyTypeChecker
     def __init__(self, tempx, tempy):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load(
@@ -999,8 +1203,10 @@ class fish(pygame.sprite.Sprite):
 
 
 class stopwatch:
+    elapsedsec: int
+
     def __init__(self):
-        self.starttime = time.time()
+        self.starttime = time()
         self.pausedtime = 0
         self.totalpausedtime = 0
         self.paused = 0
@@ -1008,18 +1214,19 @@ class stopwatch:
         self.totalsec = 0
 
     def reset(self):
-        self.startime = time.time()
+        self.starttime = time()
+        self.elapsedsec = (time() - self.starttime) - self.totalpausedtime
         self.totalsec = self.totalsec + self.elapsedsec
 
     def update(self):
         if self.paused == 0:
-            self.elapsedsec = (time.time() - self.starttime) - self.totalpausedtime
+            self.elapsedsec = (time() - self.starttime) - self.totalpausedtime
             self.stopwatchmesg = f"time elapsed: {self.elapsedsec:.2f}  seconds"
         elif self.paused == 1:
-            self.pausedtime = time.time() - self.pausestart
+            self.pausedtime = time() - self.pausestart
 
     def pause(self):
-        self.pausestart = time.time()
+        self.pausestart = time()
         self.paused = 1
 
     def unpause(self):
@@ -1032,7 +1239,7 @@ def start_game():
     global mycat
     global cameraobj
     myengine = Background()
-    mycat = Player()
+    mycat = Player(myengine.ca.catbedx)
     cameraobj = Camera()
     myengine.init_bg_frame()
     myengine.init_score()
