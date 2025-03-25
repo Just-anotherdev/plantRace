@@ -8,8 +8,8 @@ import pygame
 from PIL import Image
 
 
-#TODO untangle what I can reasonably keep in the engine class and take from the background class
-#TODO and make this a module instead of a part of the main script so it can be reused fo rother games
+# TODO untangle what I can reasonably keep in the engine class and take from the background class
+# TODO and make this a module instead of a part of the main script so it can be reused fo rother games
 
 class Engine:
     def __init__(self):
@@ -320,7 +320,7 @@ class Engine:
                     self.winner = 0
 
         elif self.mode == 6:
-            #self.test_win()
+            # self.test_win()
             pass
             # won
 
@@ -371,8 +371,6 @@ class Engine:
         elif self.mode == 3:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        self.winner = 1
                     if event.key == pygame.K_u:
                         mycat.catcolor = 0
                     if event.key == pygame.K_i:
@@ -534,6 +532,7 @@ class interactivetextbox(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (int(myengine.windoww / 2), int(myengine.windowh / 2))
 
+
 class CellularAutomata:
     def __init__(self, xtiles=10, ytiles=10):
         self.workgrid = None
@@ -559,6 +558,7 @@ class CellularAutomata:
         while len(self.workgrid) < self.tilestall:
             self.init_row()
             self.workgrid.append(self.currentrow)
+
     def init_row(self):
         self.currentrow = []
         while len(self.currentrow) < self.tileswide:
@@ -574,7 +574,8 @@ class CellularAutomata:
             tempint = random.randrange(1, self.tileswide)
         self.workgrid[0][tempint].set_value(0)
         self.catbedx = (tempint * 200) + 100
-    def set_neighbors_row(self,rownum):
+
+    def set_neighbors_row(self, rownum):
         i = 0
         lastcell = None
         lastvalue = None
@@ -593,12 +594,13 @@ class CellularAutomata:
         for e in self.workgrid[1]:
             if i > 0:
                 e.set_topleftneighbor(self.workgrid[rownum][i - 1].value)
-            if i < self.tileswide - 1 :
+            if i < self.tileswide - 1:
                 e.set_toprightneighbor(self.workgrid[rownum][i + 1].value)
             e.set_topneighbor(self.workgrid[rownum][i].value)
             lastcell = e
             lastvalue = e.value
             i = i + 1
+
     def set_all_neighbors(self):
         i = 0
         for e in self.workgrid:
@@ -608,8 +610,8 @@ class CellularAutomata:
     def generatenextrow(self, rownum):
         for e in self.workgrid[rownum]:
             if e.topneighbor is not None and e.topleftneighbor is not None and e.toprightneighbor is not None:
-                #make a list containing each of the top neighbors, add grass water and wet dirt and plant1stage1 then randomly pick from the list
-                workinglist =  [4, 7]
+                # make a list containing each of the top neighbors, add grass water and wet dirt and plant1stage1 then randomly pick from the list
+                workinglist = [4, 7]
                 workinglist.extend([e.topleftneighbor, e.toprightneighbor, e.topneighbor])
                 if 0 in workinglist:
                     workinglist.remove(0)
@@ -621,15 +623,17 @@ class CellularAutomata:
                 if e.topneighbor is not None:
                     workinglist.append([e.topneighbor])
                 e.set_value(random.choice(workinglist))
+
     def generate_full_grid(self):
         self.generate_top_row()
         self.set_neighbors_row(1)
         i = 1
         while i < self.tilestall:
             self.generatenextrow(i)
-            if i < self.tilestall- 1:
+            if i < self.tilestall - 1:
                 self.set_neighbors_row(i + 1)
             i = i + 1
+
     def getallvalues(self):
         tempgrid = []
         for e in self.workgrid:
@@ -662,7 +666,7 @@ class CellularAutomata:
         self.workgrid[x - 1][y - 1].set_value(7)
         self.workgrid[x + 1][y - 1].set_value(7)
         self.workgrid[x - 1][y + 1].set_value(7)
-        #print(f"pond deployed at {x}, {y}")
+        # print(f"pond deployed at {x}, {y}")
 
     def convert_to_tilenames(self):
         self.tilegrid = []
@@ -686,11 +690,6 @@ class CellularAutomata:
         self.convert_to_tilenames()
 
 
-
-
-
-
-
 class Cell:
     def __init__(self):
         self.value = None
@@ -704,7 +703,7 @@ class Cell:
         self.bottomrightneighbor = None
 
     def random_fill(self):
-        self.value = random.choice([2,3,4,7])
+        self.value = random.choice([2, 3, 4, 7])
 
     def set_value(self, newvalue):
         self.value = newvalue
@@ -723,6 +722,7 @@ class Cell:
 
     def set_toprightneighbor(self, neighborvalue):
         self.toprightneighbor = neighborvalue
+
 
 class Background(Engine):
     def __init__(self):
@@ -795,9 +795,9 @@ class Background(Engine):
             (np.uint8(255), np.uint8(253), np.uint8(0)): "plant1stage3wet",
             (np.uint8(0), np.uint8(36), np.uint8(254)): "water",
         }
-        img = Image.open(mappath)  # import image as a pillow image
+        img = Image.open(mappath)  # open image as a pillow image
         img = img.convert("RGB")  # drop alpha
-        img = np.asarray(img)  # import picture as numpy array
+        img = np.asarray(img)  # open picture as numpy array
         inputw = img.shape[1]  # set inputw to the width of the input image
         inputh = img.shape[0]  # set inputh to the height of the input image
         p = 0
@@ -1038,7 +1038,7 @@ class Player(pygame.sprite.Sprite):
         self.image = self.image.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (
-           spawnx , 100)
+            spawnx, 100)
         self.animiter = 0
         myengine.allvisible.add(self)
         myengine.toanimate.add(self)
@@ -1159,11 +1159,13 @@ class Player(pygame.sprite.Sprite):
                 self.image = self.image.convert_alpha()
                 if self.animiter > 158:
                     self.animiter = 0
+
     def reset(self, spawnx):
         self.rect.center = (
             spawnx, 100)
         self.xv = 0
         self.yv = 0
+
 
 class Poop(pygame.sprite.Sprite):
     # this class makes poop objects
